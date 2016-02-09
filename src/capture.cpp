@@ -1,4 +1,3 @@
-
 #include "capture.h"
 
 Capture::Capture(ImageBuffer& buffer) :
@@ -10,9 +9,10 @@ Capture::Capture(ImageBuffer& buffer) :
   image_buffer {buffer},
   face_cascade {},
   eyes_cascade {},
-  width {},
-  height {},
-  ratio {} {
+  window_width {},
+  window_height {},
+  camera_width {},
+  camera_height {} {
     // ------ setup  GL
     if (!capture_window) throw std::runtime_error("Did not manages to create Capture Window");
     glfwSetKeyCallback(capture_window, helper::gl::key_callback);
@@ -24,18 +24,13 @@ Capture::Capture(ImageBuffer& buffer) :
     // glEnable( GL_TEXTURE_2D );
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSwapInterval(properties::vsync);
-    glfwGetFramebufferSize(capture_window, &width, &height);
-    ratio = static_cast<float>(width) / static_cast<float>(height);
-#ifdef DEBUG   
-    HELPER_LOG_OUT( "--capture screen FrameBuffer's resolution set to: " << width << "x" << height);
-#endif // DEBUG
+    glfwGetFramebufferSize(capture_window, &window_width, &window_height);
     // ------ set up CV
     if (!video_capture.open(properties::camera))
       throw std::runtime_error("Failed to initialise camera");
-    properties::camera_width = video_capture.get(CV_CAP_PROP_FRAME_WIDTH);
-    properties::camera_height = video_capture.get(CV_CAP_PROP_FRAME_HEIGHT);
-    HELPER_LOG_OUT("--camera resolution is: " << properties::camera_width  << "x" <<
-		   properties::camera_height);
+    camera_width = video_capture.get(CV_CAP_PROP_FRAME_WIDTH);
+    camera_height = video_capture.get(CV_CAP_PROP_FRAME_HEIGHT);
+    HELPER_LOG_OUT("--camera resolution is: " << camera_width  << "x" << camera_height);
     if (!face_cascade.load(FACE_CASCADE))
       throw std::runtime_error("Failed to load face cascade classfier");
     if (!eyes_cascade.load(EYES_CASCADE))
@@ -44,7 +39,7 @@ Capture::Capture(ImageBuffer& buffer) :
 
 void Capture::gl_preample() {
   glfwMakeContextCurrent(capture_window);    
-  glViewport(0, 0, width, height);
+  glViewport(0, 0, window_width, window_height);
   glClearColor(BACKGROUND_COLOUR); 
   glClear(GL_COLOR_BUFFER_BIT);
   glMatrixMode(GL_PROJECTION);
@@ -60,19 +55,9 @@ void Capture::update_frame() {
       throw helper::quit_program_exception();
 
     gl_preample();
-    
-    try {
-//       display
-    }
-    catch (helper::no_cv_data_exception& e) {
-      HELPER_LOG_ERR("Capture window: cv::Mat was empty");
-    }
-    
-    cv::Mat video_frame;
+    cv::Mat video_frame{};
     get_video_frame(video_frame);
-    cv::flip(video_frame,video_frame,0); // opengl mirrors mats
     helper::gl::display_cv_mat(video_frame);
-    
     
     // try {
     //   if (detect_face(video_frame)) { // detect face
@@ -92,18 +77,9 @@ void Capture::update_frame() {
     // catch (helper::too_many_faces_exception& e) {
     //   // msg: too many faces detected etc
     // }
-
-    // glRotatef((float) glfwGetTime() * 150.f, 0.f, 0.f, 1.f);
-    // glBegin(GL_TRIANGLES);
-    // glColor3f(1.f, 0.f, 0.f);
-    // glVertex3f(-0.6f, -0.4f, 0.f);
-    // glColor3f(0.f, 1.f, 0.f);
-    // glVertex3f(0.6f, -0.4f, 0.f);
-    // glColor3f(0.f, 0.f, 1.f);
-    // glVertex3f(0.f, 0.6f, 0.f);
-    // glEnd();
     
     glfwSwapBuffers(capture_window);
+    // glfwPollEvents();
   }
 }
 

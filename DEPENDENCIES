@@ -1,3 +1,5 @@
 cmake
 boost
 openCV
+glfw-devel (as of February 2016)
+glew

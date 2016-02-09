@@ -30,9 +30,10 @@ private:
   ImageBuffer& image_buffer;
   cv::CascadeClassifier face_cascade;
   cv::CascadeClassifier eyes_cascade;
-  int width;
-  int height;
-  float ratio;
+  int window_width;
+  int window_height;
+  unsigned int camera_width;
+  unsigned int camera_height;
   void gl_preample(); // standard gl preample setup 
   // void prepare_load_and_save_image(cv::Mat&, ...)
   boost::optional<Face> detect_face(cv::Mat&);
@@ -41,11 +42,12 @@ private:
   // noise_and_mouth_detection
 public:
   void update_frame(); // generate next frame & detection face
+  inline unsigned int get_camera_width() const {return camera_width;}
+  inline unsigned int get_camera_height() const {return camera_height;}
   inline void pause()  {running = false;}
   inline void resume() {running = true;}
-  inline int get_width() const noexcept {return width;};
-  inline int get_height() const noexcept {return height;};
-  inline float get_ratio() const noexcept {return ratio;};
+  inline int get_window_width() const noexcept {return window_width;};
+  inline int get_window_height() const noexcept {return window_height;};
   explicit Capture(ImageBuffer&); 
   inline ~Capture() {
     glfwDestroyWindow(capture_window);

@@ -6,9 +6,8 @@ Projection::Projection(ImageBuffer& buffer) :
   				      properties::projection_monitor,NULL)},
   running {true},
   image_buffer {buffer},
-  width {},
-  height {},
-  ratio {} {
+  window_width {},
+  window_height {} {
     // ---- set up GL
     if (!projection_window) throw std::runtime_error("Did not manages to create Capture Window");
     glfwSetKeyCallback(projection_window, helper::gl::key_callback);
@@ -19,16 +18,12 @@ Projection::Projection(ImageBuffer& buffer) :
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSwapInterval(properties::vsync);
-    glfwGetFramebufferSize(projection_window, &width, &height);
-    ratio = static_cast<float>(width) / static_cast<float>(height);
-#ifdef DEBUG   
-    HELPER_LOG_OUT( "--projection monitor FrameBuffer's resolution set to: " << width << "x" << height);
-#endif // DEBUG
+    glfwGetFramebufferSize(projection_window, &window_width, &window_height);
   }
 
 void Projection::gl_preample() {
   glfwMakeContextCurrent(projection_window);    
-  glViewport(0, 0, width, height);
+  glViewport(0, 0, window_width, window_height);
   glClearColor(BACKGROUND_COLOUR); 
   glClear(GL_COLOR_BUFFER_BIT);
   glMatrixMode(GL_PROJECTION);
@@ -44,14 +39,29 @@ void Projection::update_frame() {
       throw helper::quit_program_exception();
     gl_preample();
 
-    cv::Mat average{};
+    // average with opencv
+    cv::Mat average{image_buffer[0]};
     image_buffer.iterate([&average](cv::Mat mat){
-	cv::addWeighted(average,0.5,mat,0.5,0,average);
-      });
+    	cv::addWeighted(average,0.5,mat,0.5,0,average);
+      },1); // skip first element
+    helper::gl::display_cv_mat(average);
+
+    // average with opengl
+    // image_buffer.iterate([](cv::Mat mat){
+    // 	glPushMatrix();
+    // 	helper::gl::display_cv_mat(mat,0.5);
+    // 	glPopMatrix();
+    //   }); // skip first element
+
+    // average with a container of Textures
+    // ??
+    
     // properties::animation::speed
     // glfwGetTime();
-    helper::gl::display_cv_mat(average);
-     
+
+    // helper::gl::display_cv_mat(image_buffer[0]);
+
     glfwSwapBuffers(projection_window);
+    // glfwPollEvents();
   }
 }

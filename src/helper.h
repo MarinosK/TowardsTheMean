@@ -55,8 +55,8 @@ namespace helper {
   namespace gl {
     void setup();
     inline void error_callback(int error, const char* description) {
-      HELPER_LOG_ERR(description << "error code: " << error);
-      throw std::runtime_error(description); // maybe not throw here?
+      HELPER_LOG_ERR(description << " Error code: " << error);
+      throw std::runtime_error(description); 
     }
     inline void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
       if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -65,7 +65,7 @@ namespace helper {
     inline void clean() { // general cleanup
       glfwTerminate(); 
     }
-    void display_cv_mat(const cv::Mat&); // the cv::Mat has to be already flipped and scaled 
+    void display_cv_mat(const cv::Mat&, float alpha = 1.f); 
   }
 }
 

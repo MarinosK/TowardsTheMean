@@ -89,16 +89,18 @@ TEST_F(ImageBufferTest,test_image_add_and_iterator) {
     });
 }
 
-TEST_F(ImageBufferTest,operator_at_throws) {
-  ASSERT_THROW(buffer[100],std::out_of_range);
-}
-
-TEST_F(ImageBufferTest,operator_at_correctly_throws) {
-  try { buffer[100]; }
-  catch (const std::out_of_range& e) {
-    ASSERT_STREQ(e.what(), "ImageBuffer: item's index is out of bounds");
-  }
-}
+// #ifndef UNSAFE_OPTIMISATIONS
+// TEST_F(ImageBufferTest,operator_at_throws) {
+//   ASSERT_THROW(buffer[100],std::out_of_range);
+// }
+//
+// TEST_F(ImageBufferTest,operator_at_correctly_throws) {
+//   try { buffer[100]; }
+//   catch (const std::out_of_range& e) {
+//     ASSERT_STREQ(e.what(), "ImageBuffer: item's index is out of bounds");
+//   }
+// }
+// #endif
 
 TEST_F(ImageBufferTest,operator_at_correctly_returns) {
   cv::Mat mat = bufferVec[1];
@@ -134,25 +136,20 @@ TEST(Capture_Ctor, getters_function_correctly) {
   helper::gl::setup();
   ImageBuffer images{10}; 
   Capture cap {images};
-  ASSERT_EQ(cap.get_width(),properties::capture_screen_width);
-  ASSERT_EQ(cap.get_height(),properties::capture_screen_height);
-  ASSERT_FLOAT_EQ(cap.get_ratio(),(float) properties::capture_screen_width
-	    / (float) properties::capture_screen_height);
+  ASSERT_EQ(cap.get_window_width(),properties::capture_screen_width);
+  ASSERT_EQ(cap.get_window_height(),properties::capture_screen_height);
 }
 
 // ============================= Projection ============================== 
-// TEST(Projection_Ctor, getters_function_correctly) {
-//   const char* commands_to_parse[1] {"command"};
-//   helper::parametrise(1, const_cast<char**>(commands_to_parse));
-//   helper::gl::setup();
-//   ImageBuffer images{10}; 
-//   Projection proj {images};
-//   ASSERT_EQ(proj.get_height(),properties::projection_monitor_height);
-//   ASSERT_EQ(proj.get_width(),properties::projection_monitor_width);
-//   ASSERT_FLOAT_EQ(proj.get_ratio(),(float) properties::projection_monitor_width
-// 	    / (float) properties::projection_monitor_height);
-// }
-
+TEST(Projector_Ctor, getters_function_correctly) {
+  const char* commands_to_parse[1] {"command"};
+  helper::parametrise(1, const_cast<char**>(commands_to_parse));
+  helper::gl::setup();
+  ImageBuffer images{10}; 
+  Projection proj {images};
+  ASSERT_EQ(proj.get_window_width(),properties::projection_monitor_width);
+  ASSERT_EQ(proj.get_window_height(),properties::projection_monitor_height);
+}
 
 // =============================== Use Cases  ===============================
 // TEST(use_case_debug_display, load_and_debug_display_images) {

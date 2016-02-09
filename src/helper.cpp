@@ -113,7 +113,7 @@ std::vector<cv::Mat> helper::loadSampleImages() {
 		boost::filesystem::directory_iterator{},
 		[&](boost::filesystem::directory_entry file){
 		  cv::Mat image{cv::imread(file.path().string())};
-		  cv::flip(image, image, 0); // opengl mirrors mats anyway
+		  cv::resize(image,image,cv::Size{CAPTURED_IMAGE_WIDTH,CAPTURED_IMAGE_HEIGHT});  // this might not be necessary later on
 		  images.emplace_back(image);
 		});
   return images;    
@@ -143,7 +143,7 @@ void helper::gl::setup() {
   HELPER_LOG_OUT( "--projection screen resolution detected: " << properties::projection_monitor_width
   		  << "x" << properties::projection_monitor_height);
 }
-void helper::gl::display_cv_mat(const cv::Mat& mat) { 
+void helper::gl::display_cv_mat(const cv::Mat& mat, float alpha) { 
   if (mat.data) {
     GLuint texture;
     glGenTextures(1, &texture);
@@ -153,15 +153,16 @@ void helper::gl::display_cv_mat(const cv::Mat& mat) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mat.cols, mat.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, mat.ptr());
+    glColor4f(1,1,1,alpha);
     glBegin (GL_QUADS);
     glTexCoord2d(0.f,0.f);
-    glVertex2d(0.f,0.f);
-    glTexCoord2d(1.f,0.f); 
-    glVertex2d(1.f,0.f);
-    glTexCoord2d(1.f,1.f); 
-    glVertex2d(1.f,1.f);
-    glTexCoord2d(0.f,1.f); 
     glVertex2d(0.f,1.f);
+    glTexCoord2d(1.f,0.f); 
+    glVertex2d(1.f,1.f);
+    glTexCoord2d(1.f,1.f); 
+    glVertex2d(1.f,0.f);
+    glTexCoord2d(0.f,1.f); 
+    glVertex2d(0.f,0.f);
     glEnd();
     glDeleteTextures( 1, &texture ); // **** clean up
   } else throw helper::no_cv_data_exception();

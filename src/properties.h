@@ -8,6 +8,9 @@
 // Default values for various settings and various global constants
 // note that some of these values can be overriden with command line flags
 
+// comment out to turn unsafe optimisations on/off
+// #define UNSAFE_OPTIMISATIONS 
+
 // #define COLOR_MODE CV_LOAD_IMAGE_COLOR
 #define QUIT_AFTER_MINUTES 600 
 #define ASSETS_PATH "./assets/" 
@@ -23,7 +26,9 @@
 #define NEW_IMAGE_FADEIN_TIME 5 // seconds
 #define VSYNC 1 // the swapping buffer interval
 #define ANTI_ALLIASING 4
-#define BACKGROUND_COLOUR 0.f, 0.f, 0.f, 1.f 
+#define BACKGROUND_COLOUR 0.f, 0.f, 0.f, 1.f
+#define CAPTURED_IMAGE_WIDTH 640   // this should probably match the camera's width
+#define CAPTURED_IMAGE_HEIGHT 480  // this should probably match the camera's height
 
 
 // Runtime global constants (externs are defined by helper::parametrise)
@@ -38,8 +43,6 @@ namespace properties {
   extern const unsigned long& quit_after_minutes;
   extern const float& new_image_fadein_time;
   extern const unsigned short& anti_alliasing;
-  unsigned int camera_width {};   // *** set by Capture Ctor at runtime
-  unsigned int camera_height {};  // *** set by Capture Ctor at runtime
   extern GLFWmonitor*& primary_monitor;     // to somehow make const sometime later
   extern GLFWmonitor*& projection_monitor;   // to somehow make const sometime later
   extern const int& vsync; 
