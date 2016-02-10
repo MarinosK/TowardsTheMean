@@ -37,7 +37,17 @@ private:
   void gl_preample(); // standard gl preample setup 
   // void prepare_load_and_save_image(cv::Mat&, ...)
   boost::optional<Face> detect_face(cv::Mat&);
-  void get_video_frame(cv::Mat&);
+  inline void get_video_frame(cv::Mat& video_frame) {
+#ifndef UNSAFE_OPTIMISATIONS
+    if (!video_capture.isOpened())
+      throw std::runtime_error("Camera not working (maybe unplugged?)");
+#endif // UNSAFE_OPTIMISATIONS
+    video_capture.read(video_frame);
+#ifndef UNSAFE_OPTIMISATIONS
+    if( !video_frame.data )
+      throw std::runtime_error("Failed to fetch data from the camera");
+#endif // UNSAFE_OPTIMISATIONS
+  }
   // void capture_photo(cv::Mat&);
   // noise_and_mouth_detection
 public:

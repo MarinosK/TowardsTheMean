@@ -83,14 +83,6 @@ void Capture::update_frame() {
   }
 }
 
-void Capture::get_video_frame(cv::Mat& video_frame) {
-  if (!video_capture.isOpened())
-    throw std::runtime_error("Camera not working (maybe unplugged?)");
-  video_capture >> video_frame;
-  if( !video_frame.data )
-    throw std::runtime_error("Failed to fetch data from the camera");
-}
-
 boost::optional<Face> Capture::detect_face(cv::Mat& frame){
   std::vector<cv::Rect> faces; // vector holding detected faces
   std::vector<cv::Rect> pair_of_eyes; // the LAST detected pair of eyes

@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <mar_algo.h>
 #include "helper.h"
 #include "capture.h"
 #include "imageBuffer.h"
@@ -19,13 +20,34 @@
 //   ASSERT_STREQ(EYES_CASCADE, "./assets/haarcascade_eye_tree_eyeglasses.xml" );
 // }
 
-// ============================= Helper ==============================
+// ============================= mar_algo ==============================
 
-// TEST(setup_opengl, retrieve_monitors_correctly) {
-//   helper::setup_opengl();
-//   ASSERT_EQ(properties::primary_monitor, glfwGetPrimaryMonitor());
-// }
+TEST(binary_fold, operate_on_non_balanced_containers) {
+  std::vector<int> v = {10,10,10,10,10};
+  auto result = mar::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
+  ASSERT_EQ(result, 10);
+}
 
+TEST(binary_fold, operate_on_non_balanced_containers2) {
+  std::vector<int> v = {1,3,5,6,1};
+  auto result = mar::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
+  ASSERT_EQ(result, 0);
+}
+
+TEST(binary_fold, operate_on_balanced_containers) {
+  std::vector<int> v = {5,4,3,2};
+  auto result = mar::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
+  ASSERT_EQ(result, 0);
+}
+
+TEST(binary_fold, operate_on_balanced_containers2) {
+  std::vector<int> v = {7,4,9,2,6,8};
+  auto result = mar::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
+  ASSERT_EQ(result,-2);
+}
+
+
+// ============================= helper ============================== 
 TEST(helper_parametrise, correctly_parse_command_line_arguments) {
   constexpr unsigned short argc {13};
   const char* commands_to_parse[argc] {"command", "--animation_speed", "30",
@@ -89,18 +111,18 @@ TEST_F(ImageBufferTest,test_image_add_and_iterator) {
     });
 }
 
-// #ifndef UNSAFE_OPTIMISATIONS
-// TEST_F(ImageBufferTest,operator_at_throws) {
-//   ASSERT_THROW(buffer[100],std::out_of_range);
-// }
-//
-// TEST_F(ImageBufferTest,operator_at_correctly_throws) {
-//   try { buffer[100]; }
-//   catch (const std::out_of_range& e) {
-//     ASSERT_STREQ(e.what(), "ImageBuffer: item's index is out of bounds");
-//   }
-// }
-// #endif
+#ifndef UNSAFE_OPTIMISATIONS
+TEST_F(ImageBufferTest,operator_at_throws) {
+  ASSERT_THROW(buffer[100],std::out_of_range);
+}
+
+TEST_F(ImageBufferTest,operator_at_correctly_throws) {
+  try { buffer[100]; }
+  catch (const std::out_of_range& e) {
+    ASSERT_STREQ(e.what(), "ImageBuffer: item's index is out of bounds");
+  }
+}
+#endif
 
 TEST_F(ImageBufferTest,operator_at_correctly_returns) {
   cv::Mat mat = bufferVec[1];

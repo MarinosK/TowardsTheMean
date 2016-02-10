@@ -34,16 +34,22 @@ void Projection::gl_preample() {
 }
 
 void Projection::update_frame() {
+  using namespace std::placeholders; 
   if (running) {
     if (glfwWindowShouldClose(projection_window)) // quit on escape
       throw helper::quit_program_exception();
     gl_preample();
+    auto now = glfwGetTime();
+    auto index = 0.f;
+    cv::Mat average {image_buffer.binary_fold([&now, &index](auto im1, auto im2) {
+	  cv::Mat result{};
+	  auto weight = std::abs(sin(now / properties::animation_speed + (index+=1.3))) * 0.2 + 0.3;
+	  cv::addWeighted(im1,weight,im2,weight,0,result);
+	  return result;
+	})};
 
-    // average with opencv
-    cv::Mat average{image_buffer[0]};
-    image_buffer.iterate([&average](cv::Mat mat){
-    	cv::addWeighted(average,0.5,mat,0.5,0,average);
-      },1); // skip first element
+    // normalize average here?
+      
     helper::gl::display_cv_mat(average);
 
     // average with opengl
@@ -52,15 +58,10 @@ void Projection::update_frame() {
     // 	helper::gl::display_cv_mat(mat,0.5);
     // 	glPopMatrix();
     //   }); // skip first element
-
+    //
     // average with a container of Textures
     // ??
     
-    // properties::animation::speed
-    // glfwGetTime();
-
-    // helper::gl::display_cv_mat(image_buffer[0]);
-
     glfwSwapBuffers(projection_window);
     // glfwPollEvents();
   }

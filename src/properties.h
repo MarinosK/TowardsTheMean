@@ -9,7 +9,7 @@
 // note that some of these values can be overriden with command line flags
 
 // comment out to turn unsafe optimisations on/off
-// #define UNSAFE_OPTIMISATIONS 
+#define UNSAFE_OPTIMISATIONS 
 
 // #define COLOR_MODE CV_LOAD_IMAGE_COLOR
 #define QUIT_AFTER_MINUTES 600 
@@ -20,7 +20,7 @@
 #define FACE_FRAME_COLOUR cv::Scalar(255,255,0) // yellow 
 #define EYES_FRAME_COLOUR cv::Scalar(255,0,0) // blue 
 #define LOGGING_FILE_PATH "./logs/%Y-%m-%d_%H-%M-%S.%N.log"
-#define ANIMATION_SPEED 1 // values expected ?? 
+#define ANIMATION_SPEED 5 // large values = slower speed
 #define CAMERA_INDEX 0 
 #define MAX_IMAGES_IN_LOOP 40 
 #define NEW_IMAGE_FADEIN_TIME 5 // seconds

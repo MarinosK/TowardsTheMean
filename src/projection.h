@@ -1,6 +1,7 @@
 #ifndef PROJECTION_H
 #define PROJECTION_H
 
+#include <cmath>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <boost/core/noncopyable.hpp>
@@ -8,6 +9,7 @@
 #include "helper.h"
 #include "imageBuffer.h"
 
+#include <functional>
 // #include <thread>
 
 
