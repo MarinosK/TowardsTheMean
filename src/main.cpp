@@ -25,8 +25,9 @@ int main( int argc, char** argv) {
     clock::time_point program_start_time {clock::now()};
     helper::logging::setup();
     helper::parametrise(argc, argv);
+    // helper::create_session_image_folder(); 
     helper::gl::setup();
-    Projection proj {}; // animate 
+    Projection proj {}; 
     Capture cap {&proj}; // capture, allign, save to disk and pass to the projection process
     std::atomic<bool> program_should_quit {false};
     // --------------- quit after the user-defined number of minutes ------------------

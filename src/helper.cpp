@@ -108,7 +108,7 @@ void helper::parametrise(int ac, char** argv) { // set runtime constants
   HELPER_LOG_OUT( "--the application will quit after " << properties::quit_after_minutes
 		  << " minutes");
 #ifdef UNSAFE_OPTIMISATIONS
-  HELPER_LOG_OUT( "\n*** UNSAFE OPTIMISATIONS TURNED ON ***");
+  HELPER_LOG_OUT( "*** UNSAFE OPTIMISATIONS TURNED ON ***");
 #endif // UNSAFE_OPTIMISATIONS
 }
 

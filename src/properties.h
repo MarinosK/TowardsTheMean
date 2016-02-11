@@ -16,9 +16,8 @@
 #define ASSETS_PATH "./assets/" 
 #define FACE_CASCADE ASSETS_PATH "lbpcascade_frontalface.xml" 
 #define EYES_CASCADE ASSETS_PATH "haarcascade_eye_tree_eyeglasses.xml" 
-#define CAPTURE_MSG_COLOUR cv::Scalar(0,0,255) // red 
-#define FACE_FRAME_COLOUR cv::Scalar(255,255,0) // yellow 
-#define EYES_FRAME_COLOUR cv::Scalar(255,0,0) // blue 
+#define FACE_FRAME_COLOUR cv::Scalar(255,0,0) 
+#define EYES_FRAME_COLOUR cv::Scalar(255,0,255) 
 #define LOGGING_FILE_PATH "./logs/%Y-%m-%d_%H-%M-%S.%N.log"
 #define ANIMATION_SPEED 2 // large values => slower speed
 #define CAMERA_INDEX 0 
@@ -29,6 +28,7 @@
 #define BACKGROUND_COLOUR 0.f, 0.f, 0.f, 1.f
 #define CAPTURED_IMAGE_WIDTH 640   // this should probably match the camera's width
 #define CAPTURED_IMAGE_HEIGHT 480  // this should probably match the camera's height
+#define FONTS_PATH ASSETS_PATH "fonts/"
 
 
 // Runtime global constants (externs are defined by helper::parametrise)

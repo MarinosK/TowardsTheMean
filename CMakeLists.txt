@@ -20,6 +20,7 @@ include_directories(/opt/local/include
 		    /usr/local/include
 		    /usr/local/include/gmock
 		    /usr/local/include/gtest
+		    /opt/local/include/freetype2
 		    src
 		    )
 set (DYN_LINK       /opt/local/lib
@@ -84,6 +85,8 @@ target_link_libraries(core ${Boost_LIBRARIES})
 target_link_libraries(core ${OPENGL_LIBRARIES})
 target_link_libraries(core GLEW)
 target_link_libraries(core glfw)
+target_link_libraries(core ftgl)
+target_link_libraries(core freetype)
 #target_link_libraries(core GLEW_1130)
 
 # configure and run tests		 

@@ -10,13 +10,25 @@ This code is distributed under the Attribution-NonCommercial-ShareAlike 3.0 Unpo
 
 # To Compile #
 
-Given that xcode, xcode-tools, cmake, openCV, Boost, glfw-devel, glew and clang is installed, try:
+You need the following dependencies:
+    * xcode
+    * xcode-tools
+    * cmake
+    * boost  1.59
+    * openCV 3.0
+    * glfw-devel (as of February 2016)
+    * glew
+	* freetype
+	* ftgl
+(you might have to edit CMakeLists.txt to update certain paths, etc)
 
-cd TowardsTheMean
-mkdir build
-cd build
-cmake <OPTIONS> ..
-make
+then try:
+
+	cd TowardsTheMean
+	mkdir build
+	cd build
+	cmake <OPTIONS> ..
+	make
 
 this will create an Install folder with the executable, the data assets, and the tests. Options are as follows:
 

@@ -15,6 +15,7 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgproc.hpp>
 #include <boost/core/noncopyable.hpp>
+#include <FTGL/ftgl.h>
 #include "properties.h"
 #include "helper.h"
 #include "projection.h"
@@ -39,9 +40,14 @@ private:
   int window_height;
   unsigned int camera_width;
   unsigned int camera_height;
-  void gl_preample(); // standard gl preample setup 
-  // void prepare_load_and_save_image(cv::Mat&, ...)
+  FTGLPixmapFont font;
+  float capture_counter;
+  bool photo_capture_flag;
+  void render_text(const char*, double x, double y, int FontSize = 56);
+  void gl_preample(); // standard gl preample setup
   boost::optional<Face> detect_face(cv::Mat&);
+  void display_detect_capture_load_and_save_portrait(cv::Mat&);
+  // void prepare_load_and_save_image(cv::Mat&, ...)
   inline void get_video_frame(cv::Mat& video_frame) {
 #ifndef UNSAFE_OPTIMISATIONS
     if (!video_capture.isOpened())

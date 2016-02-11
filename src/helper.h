@@ -55,6 +55,7 @@ namespace helper {
   // free functions
   void parametrise(int, char**); // parametrise from command line
   std::vector<cv::Mat> loadSampleImages();
+  void create_session_image_folder(); // create a new folder to put session's images inside
 
   // opengl
   namespace gl {
