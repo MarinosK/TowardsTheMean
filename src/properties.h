@@ -20,10 +20,10 @@
 #define FACE_FRAME_COLOUR cv::Scalar(255,255,0) // yellow 
 #define EYES_FRAME_COLOUR cv::Scalar(255,0,0) // blue 
 #define LOGGING_FILE_PATH "./logs/%Y-%m-%d_%H-%M-%S.%N.log"
-#define ANIMATION_SPEED 5 // large values = slower speed
+#define ANIMATION_SPEED 2 // large values => slower speed
 #define CAMERA_INDEX 0 
 #define MAX_IMAGES_IN_LOOP 40 
-#define NEW_IMAGE_FADEIN_TIME 5 // seconds
+#define NEW_IMAGE_FADEIN_TIME 20 // seconds
 #define VSYNC 1 // the swapping buffer interval
 #define ANTI_ALLIASING 4
 #define BACKGROUND_COLOUR 0.f, 0.f, 0.f, 1.f

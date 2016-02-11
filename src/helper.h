@@ -1,3 +1,8 @@
+/*
+  Coded by Marinos Koutsomichalis for the 'Towards The Mean' photo installation project.
+  Towards The Mean (c) 2016 Marianne Holm Hansen. 
+*/
+
 #ifndef HELPER_H
 #define HELPER_H
 
@@ -50,7 +55,7 @@ namespace helper {
   // free functions
   void parametrise(int, char**); // parametrise from command line
   std::vector<cv::Mat> loadSampleImages();
-  
+
   // opengl
   namespace gl {
     void setup();

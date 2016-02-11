@@ -3,7 +3,6 @@
   Towards The Mean (c) 2016 Marianne Holm Hansen. 
 */
 
-#include <vector>
 #include <chrono>
 #include <mar_util.h>
 #include <thread>
@@ -12,7 +11,6 @@
 #include "properties.h"
 #include "helper.h"
 #include "capture.h"
-#include "imageBuffer.h"
 #include "projection.h"
 
 int main( int argc, char** argv) {
@@ -28,10 +26,8 @@ int main( int argc, char** argv) {
     helper::logging::setup();
     helper::parametrise(argc, argv);
     helper::gl::setup();
-    std::vector<cv::Mat> sampleImages {helper::loadSampleImages()}; 
-    ImageBuffer images{sampleImages, properties::max_images_in_loop}; // thread-safe buffer
-    Capture cap {images}; // capture interface
-    Projection proj {images}; // projection interface
+    Projection proj {}; // animate 
+    Capture cap {&proj}; // capture, allign, save to disk and pass to the projection process
     std::atomic<bool> program_should_quit {false};
     // --------------- quit after the user-defined number of minutes ------------------
     std::thread quit_after_minutes {[&]{ while (true) {
@@ -50,8 +46,8 @@ int main( int argc, char** argv) {
     quit_on_q.detach();
     // --------------------- Main loop -----------------------
     while (!program_should_quit) {
-      cap.update_frame(); // will spawn threads when a new photo is taken
-      proj.update_frame(); // animation loop
+      proj.update_frame();
+      cap.update_frame(); // will spawn threads on each new capture
       glfwPollEvents();
     }
     throw helper::quit_program_exception();

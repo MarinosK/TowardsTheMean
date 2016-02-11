@@ -3,6 +3,8 @@
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project("Towards The Mean")
 
+# set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /opt/local/lib) 
+
 set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -std=c++14 -stdlib=libc++ -DBOOST_LOG_USE_NATIVE_SYSLOG")
 set (SOURCES       src/helper.cpp
@@ -113,3 +115,6 @@ add_custom_command(TARGET TowardsTheMean PRE_BUILD
 add_custom_command(TARGET TowardsTheMean PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E make_directory
   $<TARGET_FILE_DIR:TowardsTheMean>/logs)
+
+
+

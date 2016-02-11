@@ -1,12 +1,17 @@
+/*
+  Coded by Marinos Koutsomichalis for the 'Towards The Mean' photo installation project.
+  Towards The Mean (c) 2016 Marianne Holm Hansen. 
+*/
+
 #include "capture.h"
 
-Capture::Capture(ImageBuffer& buffer) :
+Capture::Capture(Projection* proj) :
   capture_window { glfwCreateWindow(
     properties::capture_screen_width,properties::capture_screen_height,
     "Capture Window",properties::primary_monitor, NULL) },
   video_capture {},
   running {true},
-  image_buffer {buffer},
+  projection_process {proj},
   face_cascade {},
   eyes_cascade {},
   window_width {},
@@ -14,7 +19,7 @@ Capture::Capture(ImageBuffer& buffer) :
   camera_width {},
   camera_height {} {
     // ------ setup  GL
-    if (!capture_window) throw std::runtime_error("Did not manages to create Capture Window");
+    if (!capture_window) throw std::runtime_error("Did not manage to create Capture Window");
     glfwSetKeyCallback(capture_window, helper::gl::key_callback);
     glfwMakeContextCurrent(capture_window);
     // glewExperimental=true; 
@@ -58,25 +63,26 @@ void Capture::update_frame() {
     cv::Mat video_frame{};
     get_video_frame(video_frame);
     helper::gl::display_cv_mat(video_frame);
-    
-    // try {
-    //   if (detect_face(video_frame)) { // detect face
-    // 	// display video_frame 
-    // 	// instructions and > 3,2,1 (glfw)
-    // 	if (auto face = detect_face(video_frame)) { // double check that all is OK
-    // 	  // cv::Mat portrait {capture_photo(video_frame)};
-    // 	  // launch new thread ->
-    // 	  // allign_photo();
-    // 	  // save_and_load_photo();
-    // 	}
-    //   } else {
-    // 	// msg "Please stand in front of the camera to have your photo takens
-    //   }
-    //   // display video_frame
-    // }
-    // catch (helper::too_many_faces_exception& e) {
-    //   // msg: too many faces detected etc
-    // }
+  
+    try {
+      if (detect_face(video_frame)) { // detect face
+	// increment counter
+	// if counter => 
+    	// instructions and > 3,2,1 (glfw)
+	// if counter && if (auto face = detect_face(video_frame)) { // double check that all is OK
+    	  // allign video_frame
+    	  // proj->add
+    	  // save_and_load_photo();
+	// 
+    	}
+      } else {
+    	// msg "Please stand in front of the camera to have your photo takens
+      }
+      // display video_frame
+    }
+    catch (helper::too_many_faces_exception& e) {
+      // msg: too many faces detected etc
+    }
     
     glfwSwapBuffers(capture_window);
     // glfwPollEvents();

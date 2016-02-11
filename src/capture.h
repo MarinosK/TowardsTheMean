@@ -1,3 +1,8 @@
+/*
+  Coded by Marinos Koutsomichalis for the 'Towards The Mean' photo installation project.
+  Towards The Mean (c) 2016 Marianne Holm Hansen. 
+*/
+
 #ifndef CAPTURE_H
 #define CAPTURE_H
 
@@ -12,7 +17,7 @@
 #include <boost/core/noncopyable.hpp>
 #include "properties.h"
 #include "helper.h"
-#include "imageBuffer.h"
+#include "projection.h"
 
 // #include <thread>
 
@@ -27,7 +32,7 @@ private:
   GLFWwindow* capture_window;
   cv::VideoCapture video_capture;
   bool running;
-  ImageBuffer& image_buffer;
+  Projection* projection_process;
   cv::CascadeClassifier face_cascade;
   cv::CascadeClassifier eyes_cascade;
   int window_width;
@@ -49,7 +54,7 @@ private:
 #endif // UNSAFE_OPTIMISATIONS
   }
   // void capture_photo(cv::Mat&);
-  // noise_and_mouth_detection
+  // allight
 public:
   void update_frame(); // generate next frame & detection face
   inline unsigned int get_camera_width() const {return camera_width;}
@@ -58,7 +63,7 @@ public:
   inline void resume() {running = true;}
   inline int get_window_width() const noexcept {return window_width;};
   inline int get_window_height() const noexcept {return window_height;};
-  explicit Capture(ImageBuffer&); 
+  explicit Capture(Projection*); 
   inline ~Capture() {
     glfwDestroyWindow(capture_window);
 #ifdef DEBUG
