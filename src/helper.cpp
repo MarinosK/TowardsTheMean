@@ -16,6 +16,8 @@ namespace {
     unsigned int capture_screen_height;
     unsigned int projection_monitor_width;
     unsigned int projection_monitor_height;
+    unsigned int captured_image_width;
+    unsigned int captured_image_height;
     unsigned long quit_after_minutes;
     unsigned short anti_alliasing;
     int vsync;
@@ -43,6 +45,12 @@ namespace {
 	("anti_alliasing",boost::program_options::value<unsigned short>
 	 (&helper_internal::anti_alliasing)->default_value(ANTI_ALLIASING),
 	 "anti-alliasing settings")
+	("captured_image_width", boost::program_options::value<unsigned int>
+	 (&helper_internal::captured_image_width)->default_value(CAPTURED_IMAGE_WIDTH),
+	 "the width the captured photo should be scaled to")
+	("captured_image_height", boost::program_options::value<unsigned int>
+	 (&helper_internal::captured_image_height)->default_value(CAPTURED_IMAGE_HEIGHT),
+	 "the height the captured photo should be scaled to")
 	("new_image_fadein_time", boost::program_options::value<float>
 	 (&helper_internal::new_image_fadein_time)->default_value(NEW_IMAGE_FADEIN_TIME),
 	 "set fade-in timw (seconds) for new images");
@@ -59,6 +67,8 @@ const unsigned short& properties::max_images_in_loop {helper_internal::max_image
 const float& properties::new_image_fadein_time {helper_internal::new_image_fadein_time};
 const unsigned int& properties::capture_screen_width {helper_internal::capture_screen_width};
 const unsigned int& properties::capture_screen_height {helper_internal::capture_screen_height};
+const unsigned int& properties::captured_image_width {helper_internal::captured_image_height};
+const unsigned int& properties::captured_image_height {helper_internal::captured_image_height};
 const int& properties::vsync {helper_internal::vsync};
 const unsigned short& properties::anti_alliasing {helper_internal::anti_alliasing};
 const unsigned int& properties::projection_monitor_width {
@@ -77,7 +87,7 @@ void helper::logging::setup() {
     (boost::log::keywords::file_name = LOGGING_FILE_PATH,
      boost::log::keywords::rotation_size = r_size,
      boost::log::keywords::format = "[%TimeStamp%]: %Message%"
-     );
+      );
   boost::log::add_common_attributes();
 }
 void helper::logging::supress() {
@@ -105,6 +115,8 @@ void helper::parametrise(int ac, char** argv) { // set runtime constants
   HELPER_LOG_OUT( "--fade-in time for new images set to " << properties::new_image_fadein_time );
   HELPER_LOG_OUT( "--vsync set to " << properties::vsync);
   HELPER_LOG_OUT( "--anti-alliasing set to " << properties::anti_alliasing);
+  HELPER_LOG_OUT( "--the captured photos will be scaled to "
+		  << properties::captured_image_width << "x" << properties::captured_image_height);
   HELPER_LOG_OUT( "--the application will quit after " << properties::quit_after_minutes
 		  << " minutes");
 #ifdef UNSAFE_OPTIMISATIONS
@@ -121,7 +133,9 @@ std::vector<cv::Mat> helper::loadSampleImages() {
 		boost::filesystem::directory_iterator{},
 		[&](boost::filesystem::directory_entry file){
 		  cv::Mat image{cv::imread(file.path().string())};
-		  cv::resize(image,image,cv::Size{CAPTURED_IMAGE_WIDTH,CAPTURED_IMAGE_HEIGHT});
+		  cv::resize(image,image,cv::Size{
+		      static_cast<int>(properties::captured_image_width),
+			static_cast<int>(properties::captured_image_height)});
 		  images.emplace_back(image);
 		});
   return images;    
@@ -129,8 +143,65 @@ std::vector<cv::Mat> helper::loadSampleImages() {
 
 
 // =============================== openCV ===============================
+double helper::opencv::rms_distance(const cv::Point& p1, const cv::Point& p2) {
+  auto dx = std::abs(p2.x - p1.x);
+  auto dy = std::abs(p2.y - p1.y);
+  auto result = std::pow(dx,2) * std::pow(dy,2);
+  return std::sqrt(result);
+}
+
+// void scale_rotate_translate(cv::Mat&, angle, center, new_center, scale, ) {
+//     BICUBIC):
+//   if (scale is None) and (center is None):
+//     return image.rotate(angle=angle, resample=resample)
+//   nx,ny = x,y = center
+//   sx=sy=1.0
+//   if new_center:
+//     (nx,ny) = new_center
+//   if scale:
+//     (sx,sy) = (scale, scale)
+//   cosine = math.cos(angle)
+//   sine = math.sin(angle)
+//   a = cosine/sx
+//   b = sine/sx
+//   c = x-nx*a-ny*b
+//   d = -sine/sy
+//   e = cosine/sy
+//   f = y-nx*d-ny*e
+//   return image.transform(image.size, Image.AFFINE, (a,b,c,d,e,f), resample=resample)
+
+// }
+
+// void helper::opencv::crop() {
+
+// def CropFace(image, eye_left=(0,0), eye_right=(0,0), offset_pct=(0.2,0.2), dest_sz = (70,70)):
+//   # calculate offsets in original image
+//   offset_h = math.floor(float(offset_pct[0])*dest_sz[0])
+//   offset_v = math.floor(float(offset_pct[1])*dest_sz[1])
+//   # get the direction
+//   eye_direction = (eye_right[0] - eye_left[0], eye_right[1] - eye_left[1])
+//   # calc rotation angle in radians
+//   rotation = -math.atan2(float(eye_direction[1]),float(eye_direction[0]))
+//   # distance between them
+//   dist = Distance(eye_left, eye_right)
+//   # calculate the reference eye-width
+//   reference = dest_sz[0] - 2.0*offset_h
+//   # scale factor
+//   scale = float(dist)/float(reference)
+//   # rotate original around the left eye
+//   image = ScaleRotateTranslate(image, center=eye_left, angle=rotation)
+//   # crop the rotated image
+//   crop_xy = (eye_left[0] - scale*offset_h, eye_left[1] - scale*offset_v)
+//   crop_size = (dest_sz[0]*scale, dest_sz[1]*scale)
+//   image = image.crop((int(crop_xy[0]), int(crop_xy[1]), int(crop_xy[0]+crop_size[0]), int(crop_xy[1]+crop_size[1])))
+//   # resize it
+//   image = image.resize(dest_sz, Image.ANTIALIAS)
+//   return image
+  
+// }
+
 void helper::opencv::allign_crop_resize_photo(const cv::Mat& photo, const Face& face) {
-  // cv::resize(photo,photo,cv::Size{CAPTURED_IMAGE_WIDTH, CAPTURED_IMAGE_HEIGHT});
+  // cv::resize(photo,photo,cv::Size{properties::captured_image_width, properties::captured_image_height0});
 }
 
 

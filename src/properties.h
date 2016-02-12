@@ -42,6 +42,8 @@ namespace properties {
   extern const unsigned int& capture_screen_height;
   extern const unsigned int& projection_monitor_width;
   extern const unsigned int& projection_monitor_height;
+  extern const unsigned int& captured_image_width;
+  extern const unsigned int& captured_image_height;
   extern const unsigned long& quit_after_minutes;
   extern const float& new_image_fadein_time;
   extern const unsigned short& anti_alliasing;

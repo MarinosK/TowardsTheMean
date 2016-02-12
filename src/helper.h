@@ -9,6 +9,7 @@
 #include <iostream>
 #include <exception>
 #include <vector>
+#include <cmath>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <boost/log/core.hpp>
@@ -64,6 +65,7 @@ namespace helper {
       cv::Rect  face {};
     };
     void allign_crop_resize_photo(const cv::Mat&, const helper::opencv::Face&);
+    double rms_distance(const cv::Point&, const cv::Point&);
   }
   
   // opengl
