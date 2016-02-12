@@ -5,6 +5,13 @@
 
 #include "capture.h"
 
+static constexpr unsigned int photos_wait_time4 {WAIT_TIME_BETWEEN_PHOTOS + 3};
+static constexpr unsigned int photos_wait_time3 {WAIT_TIME_BETWEEN_PHOTOS + 2};
+static constexpr unsigned int photos_wait_time2 {WAIT_TIME_BETWEEN_PHOTOS + 1};
+static constexpr unsigned int photos_wait_time1 {WAIT_TIME_BETWEEN_PHOTOS};
+static constexpr double photos_wait_time_almost_done {WAIT_TIME_BETWEEN_PHOTOS - 0.5};
+static constexpr unsigned int photos_wait_time_done {WAIT_TIME_BETWEEN_PHOTOS - 1};
+
 Capture::Capture(Projection* proj) :
   capture_window { glfwCreateWindow(
     properties::capture_screen_width,properties::capture_screen_height,
@@ -20,7 +27,11 @@ Capture::Capture(Projection* proj) :
   camera_height {},
   font {FONTS_PATH "Palatino Linotype.ttf"},
   capture_counter {0},
-  photo_capture_flag {false} {
+  photo_capture_flag {false},
+  thread_launched_flag {false},
+  draw_frames_flag {true},
+  photo_folder_path {},
+  photo_file_counter {1} {
     // ------ setup openGL
     if (!capture_window) throw std::runtime_error("Did not manage to create Capture Window");
     glfwSetKeyCallback(capture_window, helper::gl::key_callback);
@@ -42,6 +53,20 @@ Capture::Capture(Projection* proj) :
       throw std::runtime_error("Failed to load face cascade classfier");
     if (!eyes_cascade.load(EYES_CASCADE))
       throw std::runtime_error("Failed to load face cascade classfier");
+    // ------ set up paths
+    auto day = boost::gregorian::day_clock::universal_day();
+    std::ostringstream folder{};
+    unsigned int i{1};
+    folder << PHOTOS_PATH << day.month() << " " << day.day() << " " << day.year() << " session " << i;
+    boost::filesystem::path path{folder.str()};
+    while (boost::filesystem::is_directory(path)) {
+      folder.seekp(-1,folder.cur);
+      folder << i++;
+      path = boost::filesystem::path {folder.str()}; 
+    }
+    if (!boost::filesystem::create_directories(path))
+      throw std::runtime_error("Failed to create photo's folder");
+    photo_folder_path = folder.str();
   }
 
 void Capture::gl_preample() {
@@ -70,43 +95,66 @@ void Capture::update_frame() {
 }
 
 void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame) {
-   try { 
-      if (detect_face(video_frame)) { // detect face
-	helper::gl::display_cv_mat(video_frame);
-	if (!photo_capture_flag) { // capture
-	  capture_counter = glfwGetTime() + 15; // includes 10 seconds dead time in-beween
-	  photo_capture_flag = true;
-	} else if (glfwGetTime() < (capture_counter-13)) 
-	  render_text("Face detected! Please allign to the center",10,window_height-76);
-	else if (glfwGetTime() < (capture_counter-12)) 
-	  render_text("3",window_width/2,window_height/2,200);
-	else if (glfwGetTime() < (capture_counter-11)) {
-	  render_text("2",window_width/2,window_height/2,200);
-	} else if (glfwGetTime() < (capture_counter-10))
-	  render_text("1",window_width/2,window_height/2,200);
-	else if (glfwGetTime() < (capture_counter-9))
-	  render_text("done",window_width/2,window_height/2,200);
-	else if (glfwGetTime() < (capture_counter-1)) {
-	  render_text("...processing image..",(window_width/2)-50,window_height/2);
-	 // if counter && if (auto face = detect_face(video_frame)) { // double check that all is OK
-    	  // allign video_frame
-    	  // proj->add_to_animation
-	// reset counter
-    	  // save_to_disc;
-	// 
-	} else photo_capture_flag = false; // reset
-      } else {
-	helper::gl::display_cv_mat(video_frame);
-	if (photo_capture_flag) photo_capture_flag = false;
-	render_text("Position yourself opposite to the screen to have your picture taken",
-		    10,window_height-76);
+  try {
+    if (auto face = detect_face(video_frame, draw_frames_flag)) { // detect face
+      helper::gl::display_cv_mat(video_frame); 
+      if (!photo_capture_flag) { // capture
+	photo_capture_flag = true;
+	capture_counter = glfwGetTime() + 6 + WAIT_TIME_BETWEEN_PHOTOS; 
+      } else if (glfwGetTime() < (capture_counter - photos_wait_time4))
+	render_text("Face detected! Look at the camera and stand still",10,window_height-76);
+      else if (glfwGetTime() <= (capture_counter - photos_wait_time3))
+	render_text("3",window_width/2,window_height/2,200);
+      else if (glfwGetTime() <= (capture_counter - photos_wait_time2)) 
+	render_text("2",window_width/2,window_height/2,200);
+      else if (glfwGetTime() <= (capture_counter - photos_wait_time1)) 
+	render_text("1",window_width/2,window_height/2,200);
+      else if (glfwGetTime() <= (capture_counter - photos_wait_time_almost_done)) {
+	render_text("done",window_width/2,window_height/2,200);
+	draw_frames_flag = false; // don't draw frames the next few times so that the photo can be taken
+      } else if (glfwGetTime() <= (capture_counter - photos_wait_time_done)) {
+	render_text("done",window_width/2,window_height/2,200);
+	load_and_save_portait(video_frame, *face);
+      } else if (glfwGetTime() < capture_counter - 1) 
+	render_text("...processing photo..",(window_width/2)-50,window_height/2);
+      else { // reset
+	photo_capture_flag = false;
+	thread_launched_flag = false;	
       }
-    }
-    catch (helper::too_many_faces_exception& e) {
-      if (photo_capture_flag) photo_capture_flag = false;
+    } else {
       helper::gl::display_cv_mat(video_frame);
-      render_text("Too many faces! Please try one at a time",10,10);
-    }
+      if (photo_capture_flag) photo_capture_flag = false;
+      if (thread_launched_flag) thread_launched_flag = false;
+    }}
+  catch (helper::too_many_faces_exception& e) {
+    if (photo_capture_flag) photo_capture_flag = false;
+    helper::gl::display_cv_mat(video_frame);
+    render_text("Too many faces! Please try one at a time",10,10);
+  }
+}
+
+void Capture::load_and_save_portait(const cv::Mat& video_frame, const helper::opencv::Face& face) {
+  if (!thread_launched_flag) { // launch once only
+    thread_launched_flag = true; // thread is launched
+    draw_frames_flag = true; // draw frames again next time
+    std::thread t{[&](){ // launch a new thread
+	cv::Mat photo {};
+	video_frame.copyTo(photo);
+	helper::opencv::allign_crop_resize_photo(photo, face);
+	// projection_process->add_to_the_animation(photo);
+	std::ostringstream filename{};
+	filename << photo_folder_path << "/photo #" << photo_file_counter++ << ".tif"; 
+	try {
+	  cv::imwrite(filename.str(),photo);
+	  HELPER_LOG_OUT( filename.str() << " succesfully saved");	  
+	}
+	catch (std::runtime_error& e) {
+	  HELPER_LOG_ERR( "failed to write " << filename.str()
+			  << " to disc with exception: " << e.what());	  
+	}}};
+    HELPER_LOG_OUT( "new thread with id " << t.get_id() << " launched");
+    t.detach();
+  }
 }
 
 void Capture::render_text(const char* text, double x, double y, int fontSize) {
@@ -114,23 +162,23 @@ void Capture::render_text(const char* text, double x, double y, int fontSize) {
   font.Render(text, -1, FTPoint(x,y));
 }
 
-boost::optional<Face> Capture::detect_face(cv::Mat& frame){
+boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool draw_frames){
   std::vector<cv::Rect> faces; // vector holding detected faces
   cv::Mat frame_gray;
-  Face faceObject;
+  helper::opencv::Face faceObject;
   cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
   cv::equalizeHist(frame_gray, frame_gray); // **** maybe leave out for optimisation
   face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0, cv::Size(80, 80)); // detect faces
-  if (faces.empty()) return boost::optional<Face>{}; // if not found return a non-Face
+  if (faces.empty()) return boost::optional<helper::opencv::Face>{}; 
   for (auto& face : faces) { // else for each face detect eyes
     cv::Mat faceROI = frame_gray(face);
     std::vector<cv::Rect> eyes;
     eyes_cascade.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,cv::Size(30, 30)); 
-    if( eyes.size() == 2) {  // draw the frames around face/eyes
-      cv::rectangle(frame, face, FACE_FRAME_COLOUR);
+    if( eyes.size() == 2) {
+      if (draw_frames) cv::rectangle(frame, face, FACE_FRAME_COLOUR);
       for (auto& eye : eyes) {
 	eye = eye + cv::Point{face.x,face.y}; // make coordinates absolute
-	cv::rectangle(frame, eye, EYES_FRAME_COLOUR);
+	if (draw_frames) cv::rectangle(frame, eye, EYES_FRAME_COLOUR);
       }
       faceObject = {eyes[0],eyes[1],face}; // we won't have more that a couple of faces anyway so it's ok
     }

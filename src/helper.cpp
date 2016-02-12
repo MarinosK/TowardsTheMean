@@ -121,11 +121,18 @@ std::vector<cv::Mat> helper::loadSampleImages() {
 		boost::filesystem::directory_iterator{},
 		[&](boost::filesystem::directory_entry file){
 		  cv::Mat image{cv::imread(file.path().string())};
-		  cv::resize(image,image,cv::Size{CAPTURED_IMAGE_WIDTH,CAPTURED_IMAGE_HEIGHT});  // this might not be necessary later on
+		  cv::resize(image,image,cv::Size{CAPTURED_IMAGE_WIDTH,CAPTURED_IMAGE_HEIGHT});
 		  images.emplace_back(image);
 		});
   return images;    
 }
+
+
+// =============================== openCV ===============================
+void helper::opencv::allign_crop_resize_photo(const cv::Mat& photo, const Face& face) {
+  // cv::resize(photo,photo,cv::Size{CAPTURED_IMAGE_WIDTH, CAPTURED_IMAGE_HEIGHT});
+}
+
 
 // ============================= opengl ============================== 
 void helper::gl::setup() {
@@ -151,7 +158,7 @@ void helper::gl::setup() {
   HELPER_LOG_OUT( "--projection screen resolution detected: " << properties::projection_monitor_width
   		  << "x" << properties::projection_monitor_height);
 }
-void helper::gl::display_cv_mat(const cv::Mat& mat, float alpha) { 
+void helper::gl::display_cv_mat(const cv::Mat& mat) {
   if (mat.data) {
     GLuint texture;
     glGenTextures(1, &texture);
@@ -161,7 +168,7 @@ void helper::gl::display_cv_mat(const cv::Mat& mat, float alpha) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mat.cols, mat.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, mat.ptr());
-    glColor4f(1,1,1,alpha);
+    glColor4f(1.f,1.f,1.f,1.f);
     glBegin (GL_QUADS);
     glTexCoord2d(0.f,0.f);
     glVertex2d(0.f,1.f);

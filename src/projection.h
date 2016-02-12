@@ -10,7 +10,7 @@
 #include <functional>
 #include <queue>
 #include <vector>
-// #include <thread>
+#include <mutex>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <boost/core/noncopyable.hpp>
@@ -29,17 +29,21 @@ private:
   double fade_counter;
   bool fade_in_done;
   bool fade_out_done;
+  std::mutex mutex;
   void fade_in_new_images(cv::Mat);
   void gl_preample(); // standard gl preample setup 
 public:
-  void update_frame(); // generate next frame & detection face
+  void update_frame(); // generate next frame & detection face (thread safe)
   inline void pause()  {running = false;}
   inline void resume() {running = true;}
   inline int get_window_width() const noexcept {return window_width;};
   inline int get_window_height() const noexcept {return window_height;};
-  inline void add_to_the_animation(const cv::Mat& mat) { images_to_fade_in.emplace(mat); }
-  Projection(); 
-  inline ~Projection() {
+  inline void add_to_the_animation(const cv::Mat& mat) { // thread safe
+    std::lock_guard<std::mutex> lock(mutex);
+    images_to_fade_in.emplace(mat);
+  }
+  Projection(); // thread safe
+  inline ~Projection() { 
     glfwDestroyWindow(projection_window);
 #ifdef DEBUG
     HELPER_LOG_OUT("Projection Dtor has been called");

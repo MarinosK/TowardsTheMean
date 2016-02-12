@@ -55,8 +55,17 @@ namespace helper {
   // free functions
   void parametrise(int, char**); // parametrise from command line
   std::vector<cv::Mat> loadSampleImages();
-  void create_session_image_folder(); // create a new folder to put session's images inside
 
+  // opencv
+  namespace opencv {
+    struct Face {
+      cv::Rect  left_eye {};
+      cv::Rect  right_eye {};
+      cv::Rect  face {};
+    };
+    void allign_crop_resize_photo(const cv::Mat&, const helper::opencv::Face&);
+  }
+  
   // opengl
   namespace gl {
     void setup();
@@ -71,7 +80,7 @@ namespace helper {
     inline void clean() { // general cleanup
       glfwTerminate(); 
     }
-    void display_cv_mat(const cv::Mat&, float alpha = 1.f); 
+    void display_cv_mat(const cv::Mat&); 
   }
 }
 

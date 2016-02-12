@@ -143,7 +143,7 @@ TEST_F(ImageBufferTest,operator_at_correctly_returns) {
 // }
 
 TEST(Face_struct, correctly_construct_face) {
-  Face face {cv::Rect{1,2,30,40},cv::Rect{2,3,5,2},cv::Rect{10,20,100,200}};
+  helper::opencv::Face face {cv::Rect{1,2,30,40},cv::Rect{2,3,5,2},cv::Rect{10,20,100,200}};
   ASSERT_EQ(face.left_eye.x,1);
   ASSERT_EQ(face.left_eye.width,30);
   ASSERT_EQ(face.right_eye.y,3);

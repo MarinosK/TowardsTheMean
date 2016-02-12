@@ -9,7 +9,7 @@
 // note that some of these values can be overriden with command line flags
 
 // comment out to turn unsafe optimisations on/off
-#define UNSAFE_OPTIMISATIONS 
+// #define UNSAFE_OPTIMISATIONS 
 
 // #define COLOR_MODE CV_LOAD_IMAGE_COLOR
 #define QUIT_AFTER_MINUTES 600 
@@ -19,7 +19,7 @@
 #define FACE_FRAME_COLOUR cv::Scalar(255,0,0) 
 #define EYES_FRAME_COLOUR cv::Scalar(255,0,255) 
 #define LOGGING_FILE_PATH "./logs/%Y-%m-%d_%H-%M-%S.%N.log"
-#define ANIMATION_SPEED 2 // large values => slower speed
+#define ANIMATION_SPEED 1 // large values => slower speed
 #define CAMERA_INDEX 0 
 #define MAX_IMAGES_IN_LOOP 40 
 #define NEW_IMAGE_FADEIN_TIME 20 // seconds
@@ -29,6 +29,8 @@
 #define CAPTURED_IMAGE_WIDTH 640   // this should probably match the camera's width
 #define CAPTURED_IMAGE_HEIGHT 480  // this should probably match the camera's height
 #define FONTS_PATH ASSETS_PATH "fonts/"
+#define PHOTOS_PATH "./photos/"
+#define WAIT_TIME_BETWEEN_PHOTOS 10 // seconds
 
 
 // Runtime global constants (externs are defined by helper::parametrise)
