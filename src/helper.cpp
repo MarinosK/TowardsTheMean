@@ -141,67 +141,50 @@ std::vector<cv::Mat> helper::loadSampleImages() {
   return images;    
 }
 
-
 // =============================== openCV ===============================
-double helper::opencv::rms_distance(const cv::Point& p1, const cv::Point& p2) {
-  auto dx = std::abs(p2.x - p1.x);
-  auto dy = std::abs(p2.y - p1.y);
-  auto result = std::pow(dx,2) * std::pow(dy,2);
-  return std::sqrt(result);
+
+void helper::opencv::allign_and_isolate_face(cv::Mat& photo, const Face& face) {
+  // it has to be also scaled !!!
+  constexpr double isolate_offset {0.4}; // percentage around eyes that should be captured
+  const unsigned int offset_horizontal =
+    { static_cast<unsigned int>(std::floor( isolate_offset * properties::captured_image_width)) };
+  const unsigned int offset_vertical =
+    { static_cast<unsigned int>(std::floor( isolate_offset * properties::captured_image_height)) };
+  const double distance {helper::opencv::rms_distance_between_eyes(face)};
+  const double reference_eye_width {properties::captured_image_width - 2 * isolate_offset};
+  double scale_factor {distance / reference_eye_width};
+  // -- rotate
+  const double angle = -std::atan2(face.right_eye.y-face.left_eye.y, face.right_eye.x-face.left_eye.x);
+  cv::Point2i rotation_center {face.left_eye.x,face.left_eye.y};
+  cv::Mat rotation_matrix {cv::getRotationMatrix2D(rotation_center, angle, 1.f)};
+  // const auto cosine = std::cos(angle);
+  // const auto sine = std::sin(angle);
+  // const std::array<double,6> coefficients = {
+  //   cosine, sine, face.left_eye.x - (face.left_eye.x * cosine) - (face.left_eye.y * sine),
+  //   -sine, cosine, face.left_eye.y - (face.left_eye.x * (-sine)) - (face.left_eye.y * cosine)
+  // };
+  cv::warpAffine( photo, photo, rotation_matrix, photo.size());
+  // -- crop
+  const int crop_x {static_cast<int>(face.left_eye.x - scale_factor * offset_horizontal)};
+  const int crop_y {static_cast<int>(face.left_eye.y - scale_factor * offset_vertical)};
+  const int crop_width {static_cast<int>(properties::captured_image_width * scale_factor)};
+  const int crop_height {static_cast<int>(properties::captured_image_height * scale_factor)};
+  // cv::Mat roi {photo(crop_x,crop_y,crop_width,crop_height)};
+  // cv::Mat cropped_image;
+  // roi.copyTo(cropped_image);
+  // photo = cropped_image;
+  std::cout << crop_x<< "," <<crop_y<< "," <<crop_width<< "," <<crop_height << std::endl;
+  std::cout << photo.cols<< "," << photo.rows << std::endl;
+  photo = photo(cv::Rect(crop_x,crop_y,crop_width,crop_height)).clone(); // crop
+  // -- scale
+  cv::Size new_size = {
+    static_cast<int>(properties::captured_image_width), static_cast<int>(properties::captured_image_height)
+  };
+  cv::resize(photo,photo,new_size);
 }
 
-// void scale_rotate_translate(cv::Mat&, angle, center, new_center, scale, ) {
-//     BICUBIC):
-//   if (scale is None) and (center is None):
-//     return image.rotate(angle=angle, resample=resample)
-//   nx,ny = x,y = center
-//   sx=sy=1.0
-//   if new_center:
-//     (nx,ny) = new_center
-//   if scale:
-//     (sx,sy) = (scale, scale)
-//   cosine = math.cos(angle)
-//   sine = math.sin(angle)
-//   a = cosine/sx
-//   b = sine/sx
-//   c = x-nx*a-ny*b
-//   d = -sine/sy
-//   e = cosine/sy
-//   f = y-nx*d-ny*e
-//   return image.transform(image.size, Image.AFFINE, (a,b,c,d,e,f), resample=resample)
-
-// }
-
-// void helper::opencv::crop() {
-
-// def CropFace(image, eye_left=(0,0), eye_right=(0,0), offset_pct=(0.2,0.2), dest_sz = (70,70)):
-//   # calculate offsets in original image
-//   offset_h = math.floor(float(offset_pct[0])*dest_sz[0])
-//   offset_v = math.floor(float(offset_pct[1])*dest_sz[1])
-//   # get the direction
-//   eye_direction = (eye_right[0] - eye_left[0], eye_right[1] - eye_left[1])
-//   # calc rotation angle in radians
-//   rotation = -math.atan2(float(eye_direction[1]),float(eye_direction[0]))
-//   # distance between them
-//   dist = Distance(eye_left, eye_right)
-//   # calculate the reference eye-width
-//   reference = dest_sz[0] - 2.0*offset_h
-//   # scale factor
-//   scale = float(dist)/float(reference)
-//   # rotate original around the left eye
-//   image = ScaleRotateTranslate(image, center=eye_left, angle=rotation)
-//   # crop the rotated image
-//   crop_xy = (eye_left[0] - scale*offset_h, eye_left[1] - scale*offset_v)
-//   crop_size = (dest_sz[0]*scale, dest_sz[1]*scale)
-//   image = image.crop((int(crop_xy[0]), int(crop_xy[1]), int(crop_xy[0]+crop_size[0]), int(crop_xy[1]+crop_size[1])))
-//   # resize it
-//   image = image.resize(dest_sz, Image.ANTIALIAS)
-//   return image
+void helper::opencv::pad_and_resize_photo(cv::Mat&) {
   
-// }
-
-void helper::opencv::allign_crop_resize_photo(const cv::Mat& photo, const Face& face) {
-  // cv::resize(photo,photo,cv::Size{properties::captured_image_width, properties::captured_image_height0});
 }
 
 

@@ -60,7 +60,8 @@ Capture::Capture(Projection* proj) :
     folder << PHOTOS_PATH << day.month() << " " << day.day() << " " << day.year() << " session " << i;
     boost::filesystem::path path{folder.str()};
     while (boost::filesystem::is_directory(path)) {
-      folder.seekp(-1,folder.cur);
+      auto number_of_digits = static_cast<signed int>(std::log10(i)) + 1;
+      folder.seekp(-number_of_digits,folder.cur);
       folder << i++;
       path = boost::filesystem::path {folder.str()}; 
     }
@@ -138,10 +139,10 @@ void Capture::load_and_save_portait(const cv::Mat& video_frame, const helper::op
     thread_launched_flag = true; // thread is launched
     draw_frames_flag = true; // draw frames again next time
     std::thread t{[&](){ // launch a new thread
-	cv::Mat photo {};
-	video_frame.copyTo(photo);
-	helper::opencv::allign_crop_resize_photo(photo, face);
-	// projection_process->add_to_the_animation(photo);
+	cv::Mat photo;
+	video_frame.copyTo(photo); // copy so that we don't have any clashes with the camera
+	helper::opencv::allign_and_isolate_face(photo,face);
+	//--- save photo
 	std::ostringstream filename{};
 	filename << photo_folder_path << "/photo #" << photo_file_counter++ << ".tif"; 
 	try {
@@ -151,7 +152,10 @@ void Capture::load_and_save_portait(const cv::Mat& video_frame, const helper::op
 	catch (std::runtime_error& e) {
 	  HELPER_LOG_ERR( "failed to write " << filename.str()
 			  << " to disc with exception: " << e.what());	  
-	}}};
+	}
+	// helper::opencv::pad_and_resize_photo(photo);
+	// projection_process->add_to_the_animation(photo);
+      }};
     HELPER_LOG_OUT( "new thread with id " << t.get_id() << " launched");
     t.detach();
   }

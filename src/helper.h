@@ -10,6 +10,7 @@
 #include <exception>
 #include <vector>
 #include <cmath>
+#include <array>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <boost/log/core.hpp>
@@ -64,8 +65,13 @@ namespace helper {
       cv::Rect  right_eye {};
       cv::Rect  face {};
     };
-    void allign_crop_resize_photo(const cv::Mat&, const helper::opencv::Face&);
-    double rms_distance(const cv::Point&, const cv::Point&);
+    void allign_and_isolate_face(cv::Mat&, const helper::opencv::Face&);
+    void pad_and_resize_photo(cv::Mat&);
+    inline double rms_distance_between_eyes(const Face& face)  {
+      auto dx = face.right_eye.x - face.left_eye.x;
+      auto dy = face.right_eye.y - face.left_eye.y;
+      return std::sqrt(std::pow(dx,2) + std::pow(dy,2));
+    }
   }
   
   // opengl
