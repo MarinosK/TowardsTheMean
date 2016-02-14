@@ -32,66 +32,51 @@ static std::string create_unique_folder(std::string root) {
 }
 
 Capture::Capture(Projection* proj) :
-  capture_window { glfwCreateWindow(
+  capture_window_m { glfwCreateWindow(
     properties::capture_screen_width,properties::capture_screen_height,
     "Capture Window",properties::primary_monitor, NULL) },
-  video_capture {},
-  running {true},
-  projection_process {proj},
-  face_cascade {},
-  eyes_cascade {},
-  window_width {},
-  window_height {},
-  camera_width {},
-  camera_height {},
-  font {FONTS_PATH "Palatino Linotype.ttf"},
-  capture_counter {0},
-  photo_capture_flag {false},
-  thread_launched_flag {false},
-  draw_frames_flag {true},
-  photo_folder_path {create_unique_folder(PHOTOS_PATH)},
-  photo_file_counter {1} {
+  video_capture_m {},
+  running_m {true},
+  projection_process_m {proj},
+  face_cascade_m {},
+  eyes_cascade_m {},
+  window_width_m {},
+  window_height_m {},
+  camera_width_m {},
+  camera_height_m {},
+  font_m {FONTS_PATH "Palatino Linotype.ttf"},
+  capture_counter_m {0},
+  photo_capture_flag_m {false},
+  thread_launched_flag_m {false},
+  draw_frames_flag_m {true},
+  photo_folder_path_m {create_unique_folder(PHOTOS_PATH)},
+  photo_file_counter_m {1} {
     // ------ setup openGL
-    if (!capture_window) throw std::runtime_error("Did not manage to create Capture Window");
-    glfwSetKeyCallback(capture_window, helper::gl::key_callback);
-    glfwMakeContextCurrent(capture_window);
+    if (!capture_window_m) throw std::runtime_error("Did not manage to create Capture Window");
+    glfwSetKeyCallback(capture_window_m, helper::gl::key_callback);
+    glfwMakeContextCurrent(capture_window_m);
     if (glewInit() != GLEW_OK) throw std::runtime_error("Failed to initialize GLEW");
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSwapInterval(properties::vsync);
-    glfwGetFramebufferSize(capture_window, &window_width, &window_height);
-    if (font.Error()) throw std::runtime_error("Failed to load font");
+    glfwGetFramebufferSize(capture_window_m, &window_width_m, &window_height_m);
+    if (font_m.Error()) throw std::runtime_error("Failed to load font");
     // ------ set up CV
-    if (!video_capture.open(properties::camera))
+    if (!video_capture_m.open(properties::camera))
       throw std::runtime_error("Failed to initialise camera");
-    camera_width = video_capture.get(CV_CAP_PROP_FRAME_WIDTH);
-    camera_height = video_capture.get(CV_CAP_PROP_FRAME_HEIGHT);
-    HELPER_LOG_OUT("--camera resolution is: " << camera_width  << "x" << camera_height);
-    if (!face_cascade.load(FACE_CASCADE))
+    camera_width_m = video_capture_m.get(CV_CAP_PROP_FRAME_WIDTH);
+    camera_height_m = video_capture_m.get(CV_CAP_PROP_FRAME_HEIGHT);
+    HELPER_LOG_OUT("--camera resolution is: " << camera_width_m  << "x" << camera_height_m);
+    if (!face_cascade_m.load(FACE_CASCADE))
       throw std::runtime_error("Failed to load face cascade classfier");
-    if (!eyes_cascade.load(EYES_CASCADE))
+    if (!eyes_cascade_m.load(EYES_CASCADE))
       throw std::runtime_error("Failed to load face cascade classfier");
-    // ------ set up paths
-    // auto day = boost::gregorian::day_clock::universal_day();
-    // std::ostringstream folder{};
-    // unsigned int i{1};
-    // folder << PHOTOS_PATH << day.month() << " " << day.day() << " " << day.year() << " session " << i;
-    // boost::filesystem::path path{folder.str()};
-    // while (boost::filesystem::is_directory(path)) {
-    //   auto number_of_digits = static_cast<signed int>(std::log10(i)) + 1;
-    //   folder.seekp(-number_of_digits,folder.cur);
-    //   folder << i++;
-    //   path = boost::filesystem::path {folder.str()}; 
-    // }
-    // if (!boost::filesystem::create_directories(path))
-    //   throw std::runtime_error("Failed to create photo's folder");
-    // photo_folder_path = folder.str();
   }
 
 void Capture::gl_preample() {
-  glfwMakeContextCurrent(capture_window);    
-  glViewport(0, 0, window_width, window_height);
+  glfwMakeContextCurrent(capture_window_m);    
+  glViewport(0, 0, window_width_m, window_height_m);
   glClearColor(BACKGROUND_COLOUR); 
   glClear(GL_COLOR_BUFFER_BIT);
   glMatrixMode(GL_PROJECTION);
@@ -102,67 +87,67 @@ void Capture::gl_preample() {
 }
 
 void Capture::update_frame() {
-  if (running) {
-    if (glfwWindowShouldClose(capture_window)) // quit on escape
+  if (running_m) {
+    if (glfwWindowShouldClose(capture_window_m)) // quit on escape
       throw helper::quit_program_exception();
     gl_preample();
     cv::Mat video_frame{};
     get_video_frame(video_frame);
     display_detect_capture_load_and_save_portrait(video_frame);
-    glfwSwapBuffers(capture_window);
+    glfwSwapBuffers(capture_window_m);
     // glfwPollEvents();
   }
 }
 
 void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame) {
   try {
-    if (auto face = detect_face(video_frame, draw_frames_flag)) { // detect face
+    if (auto face = detect_face(video_frame, draw_frames_flag_m)) { // detect face
       helper::gl::display_cv_mat(video_frame); 
-      if (!photo_capture_flag) { // capture
-	photo_capture_flag = true;
-	capture_counter = glfwGetTime() + 6 + WAIT_TIME_BETWEEN_PHOTOS; 
-      } else if (glfwGetTime() < (capture_counter - photos_wait_time4))
-	render_text("Face detected! Look at the camera and stand still",10,window_height-76);
-      else if (glfwGetTime() <= (capture_counter - photos_wait_time3))
-	render_text("3",window_width/2,window_height/2,200);
-      else if (glfwGetTime() <= (capture_counter - photos_wait_time2)) 
-	render_text("2",window_width/2,window_height/2,200);
-      else if (glfwGetTime() <= (capture_counter - photos_wait_time1)) 
-	render_text("1",window_width/2,window_height/2,200);
-      else if (glfwGetTime() <= (capture_counter - photos_wait_time_almost_done)) {
-	render_text("done",window_width/2,window_height/2,200);
-	draw_frames_flag = false; // don't draw frames the next few times so that the photo can be taken
-      } else if (glfwGetTime() <= (capture_counter - photos_wait_time_done)) {
-	render_text("done",window_width/2,window_height/2,200);
+      if (!photo_capture_flag_m) { // capture
+	photo_capture_flag_m = true;
+	capture_counter_m = glfwGetTime() + 6 + WAIT_TIME_BETWEEN_PHOTOS; 
+      } else if (glfwGetTime() < (capture_counter_m - photos_wait_time4))
+	render_text("Face detected! Look at the camera and stand still",10,window_height_m-76);
+      else if (glfwGetTime() <= (capture_counter_m - photos_wait_time3))
+	render_text("3",window_width_m/2,window_height_m/2,200);
+      else if (glfwGetTime() <= (capture_counter_m - photos_wait_time2)) 
+	render_text("2",window_width_m/2,window_height_m/2,200);
+      else if (glfwGetTime() <= (capture_counter_m - photos_wait_time1)) 
+	render_text("1",window_width_m/2,window_height_m/2,200);
+      else if (glfwGetTime() <= (capture_counter_m - photos_wait_time_almost_done)) {
+	render_text("done",window_width_m/2,window_height_m/2,200);
+	draw_frames_flag_m = false; // don't draw frames the next few times so that the photo can be taken
+      } else if (glfwGetTime() <= (capture_counter_m - photos_wait_time_done)) {
+	render_text("done",window_width_m/2,window_height_m/2,200);
 	load_and_save_portait(video_frame, *face);
-      } else if (glfwGetTime() < capture_counter - 1) 
-	render_text("...processing photo..",(window_width/2)-50,window_height/2);
+      } else if (glfwGetTime() < capture_counter_m - 1) 
+	render_text("...processing photo..",(window_width_m/2)-50,window_height_m/2);
       else { // reset
-	photo_capture_flag = false;
-	thread_launched_flag = false;	
+	photo_capture_flag_m = false;
+	thread_launched_flag_m = false;	
       }
     } else {
       helper::gl::display_cv_mat(video_frame);
-      if (photo_capture_flag) photo_capture_flag = false;
-      if (thread_launched_flag) thread_launched_flag = false;
+      if (photo_capture_flag_m) photo_capture_flag_m = false;
+      if (thread_launched_flag_m) thread_launched_flag_m = false;
     }}
   catch (helper::too_many_faces_exception& e) {
-    if (photo_capture_flag) photo_capture_flag = false;
+    if (photo_capture_flag_m) photo_capture_flag_m = false;
     helper::gl::display_cv_mat(video_frame);
     render_text("Too many faces! Please try one at a time",10,10);
   }
 }
 
 void Capture::load_and_save_portait(const cv::Mat& video_frame, helper::opencv::Face face) {
-  if (!thread_launched_flag) { // launch once only
-    thread_launched_flag = true; // thread is launched
-    draw_frames_flag = true; // draw frames again next time
+  if (!thread_launched_flag_m) { // launch once only
+    thread_launched_flag_m = true; // thread is launched
+    draw_frames_flag_m = true; // draw frames again next time
     cv::Mat photo {video_frame.clone()}; // so that we don't have any clashes with the camera
     std::thread t{[&,this](){ // launch a new thread
 	// helper::opencv::allign_and_isolate_face(photo,face);
 	//--- save photo
 	std::ostringstream filename{};
-	filename << photo_folder_path << "/photo #" << photo_file_counter++ << ".tif"; 
+	filename << photo_folder_path_m << "/photo #" << photo_file_counter_m++ << ".tif"; 
 	try {
 	  cv::imwrite(filename.str(),photo);
 	  HELPER_LOG_OUT( filename.str() << " succesfully saved");	  
@@ -180,8 +165,8 @@ void Capture::load_and_save_portait(const cv::Mat& video_frame, helper::opencv::
 }
 
 void Capture::render_text(const char* text, double x, double y, int fontSize) {
-  font.FaceSize(fontSize);
-  font.Render(text, -1, FTPoint(x,y));
+  font_m.FaceSize(fontSize);
+  font_m.Render(text, -1, FTPoint(x,y));
 }
 
 boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool draw_frames){
@@ -190,12 +175,12 @@ boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool 
   helper::opencv::Face faceObject;
   cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
   cv::equalizeHist(frame_gray, frame_gray); // **** maybe leave out for optimisation
-  face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0, cv::Size(80, 80)); // detect faces
+  face_cascade_m.detectMultiScale(frame_gray, faces, 1.1, 2, 0, cv::Size(80, 80)); // detect faces
   if (faces.empty()) return boost::optional<helper::opencv::Face>{}; 
   for (auto& face : faces) { // else for each face detect eyes
     cv::Mat faceROI = frame_gray(face);
     std::vector<cv::Rect> eyes;
-    eyes_cascade.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,cv::Size(30, 30)); 
+    eyes_cascade_m.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,cv::Size(30, 30)); 
     if( eyes.size() == 2) {
       if (draw_frames) cv::rectangle(frame, face, FACE_FRAME_COLOUR);
       for (auto& eye : eyes) {
