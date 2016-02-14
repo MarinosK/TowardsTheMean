@@ -143,6 +143,12 @@ std::vector<cv::Mat> helper::loadSampleImages() {
 
 // =============================== openCV ===============================
 
+double helper::opencv::rms_distance_between_eyes(const Face& face)  {
+  auto dx = face.right_eye.x - face.left_eye.x;
+  auto dy = face.right_eye.y - face.left_eye.y;
+  return std::sqrt(std::pow(dx,2) + std::pow(dy,2));
+}
+
 void helper::opencv::allign_and_isolate_face(cv::Mat& photo, const Face& face) {
   // it has to be also scaled !!!
   constexpr double isolate_offset {0.4}; // percentage around eyes that should be captured
@@ -173,8 +179,10 @@ void helper::opencv::allign_and_isolate_face(cv::Mat& photo, const Face& face) {
   // cv::Mat cropped_image;
   // roi.copyTo(cropped_image);
   // photo = cropped_image;
-  std::cout << crop_x<< "," <<crop_y<< "," <<crop_width<< "," <<crop_height << std::endl;
+  std::cout << face.face.x << "," << face.face.area() << std::endl;
+  std::cout << crop_x << "," << crop_y << "," <<crop_width<< "," <<crop_height << std::endl;
   std::cout << photo.cols<< "," << photo.rows << std::endl;
+  std::cout << face.left_eye.x << "," << offset_horizontal << "," << scale_factor << std::endl;  
   photo = photo(cv::Rect(crop_x,crop_y,crop_width,crop_height)).clone(); // crop
   // -- scale
   cv::Size new_size = {

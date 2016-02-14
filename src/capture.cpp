@@ -5,12 +5,31 @@
 
 #include "capture.h"
 
+// implementation details
 static constexpr unsigned int photos_wait_time4 {WAIT_TIME_BETWEEN_PHOTOS + 3};
 static constexpr unsigned int photos_wait_time3 {WAIT_TIME_BETWEEN_PHOTOS + 2};
 static constexpr unsigned int photos_wait_time2 {WAIT_TIME_BETWEEN_PHOTOS + 1};
 static constexpr unsigned int photos_wait_time1 {WAIT_TIME_BETWEEN_PHOTOS};
 static constexpr double photos_wait_time_almost_done {WAIT_TIME_BETWEEN_PHOTOS - 0.5};
 static constexpr unsigned int photos_wait_time_done {WAIT_TIME_BETWEEN_PHOTOS - 1};
+
+static std::string create_unique_folder(std::string root) {
+  if (!(root.back() == '/')) root.push_back('/');
+  auto day = boost::gregorian::day_clock::universal_day();
+  std::ostringstream folder;
+  unsigned int i{1};
+  folder << root << day.month() << " " << day.day() << " " << day.year() << " session " << i;
+  boost::filesystem::path path{folder.str()};
+  while (boost::filesystem::is_directory(path)) {
+    auto number_of_digits = static_cast<signed int>(std::log10(i)) + 1;
+    folder.seekp(-number_of_digits,folder.cur);
+    folder << i++;
+    path = boost::filesystem::path {folder.str()}; 
+  }
+  if (!boost::filesystem::create_directories(path))
+    throw std::runtime_error("Failed to create unique folder");
+  return folder.str();
+}
 
 Capture::Capture(Projection* proj) :
   capture_window { glfwCreateWindow(
@@ -30,7 +49,7 @@ Capture::Capture(Projection* proj) :
   photo_capture_flag {false},
   thread_launched_flag {false},
   draw_frames_flag {true},
-  photo_folder_path {},
+  photo_folder_path {create_unique_folder(PHOTOS_PATH)},
   photo_file_counter {1} {
     // ------ setup openGL
     if (!capture_window) throw std::runtime_error("Did not manage to create Capture Window");
@@ -54,20 +73,20 @@ Capture::Capture(Projection* proj) :
     if (!eyes_cascade.load(EYES_CASCADE))
       throw std::runtime_error("Failed to load face cascade classfier");
     // ------ set up paths
-    auto day = boost::gregorian::day_clock::universal_day();
-    std::ostringstream folder{};
-    unsigned int i{1};
-    folder << PHOTOS_PATH << day.month() << " " << day.day() << " " << day.year() << " session " << i;
-    boost::filesystem::path path{folder.str()};
-    while (boost::filesystem::is_directory(path)) {
-      auto number_of_digits = static_cast<signed int>(std::log10(i)) + 1;
-      folder.seekp(-number_of_digits,folder.cur);
-      folder << i++;
-      path = boost::filesystem::path {folder.str()}; 
-    }
-    if (!boost::filesystem::create_directories(path))
-      throw std::runtime_error("Failed to create photo's folder");
-    photo_folder_path = folder.str();
+    // auto day = boost::gregorian::day_clock::universal_day();
+    // std::ostringstream folder{};
+    // unsigned int i{1};
+    // folder << PHOTOS_PATH << day.month() << " " << day.day() << " " << day.year() << " session " << i;
+    // boost::filesystem::path path{folder.str()};
+    // while (boost::filesystem::is_directory(path)) {
+    //   auto number_of_digits = static_cast<signed int>(std::log10(i)) + 1;
+    //   folder.seekp(-number_of_digits,folder.cur);
+    //   folder << i++;
+    //   path = boost::filesystem::path {folder.str()}; 
+    // }
+    // if (!boost::filesystem::create_directories(path))
+    //   throw std::runtime_error("Failed to create photo's folder");
+    // photo_folder_path = folder.str();
   }
 
 void Capture::gl_preample() {
@@ -134,14 +153,13 @@ void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame
   }
 }
 
-void Capture::load_and_save_portait(const cv::Mat& video_frame, const helper::opencv::Face& face) {
+void Capture::load_and_save_portait(const cv::Mat& video_frame, helper::opencv::Face face) {
   if (!thread_launched_flag) { // launch once only
     thread_launched_flag = true; // thread is launched
     draw_frames_flag = true; // draw frames again next time
-    std::thread t{[&](){ // launch a new thread
-	cv::Mat photo;
-	video_frame.copyTo(photo); // copy so that we don't have any clashes with the camera
-	helper::opencv::allign_and_isolate_face(photo,face);
+    cv::Mat photo {video_frame.clone()}; // so that we don't have any clashes with the camera
+    std::thread t{[&,this](){ // launch a new thread
+	// helper::opencv::allign_and_isolate_face(photo,face);
 	//--- save photo
 	std::ostringstream filename{};
 	filename << photo_folder_path << "/photo #" << photo_file_counter++ << ".tif"; 
@@ -190,3 +208,4 @@ boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool 
   if (faces.size()>1) throw helper::too_many_faces_exception(); // many faces
   else return faceObject;
 }
+

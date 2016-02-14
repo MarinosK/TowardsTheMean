@@ -25,6 +25,7 @@
 #include "properties.h"
 #include "helper.h"
 #include "projection.h"
+#include "mar_util.h"
 
 class Capture : private boost::noncopyable {
 private:
@@ -44,10 +45,10 @@ private:
   bool photo_capture_flag;
   bool thread_launched_flag;
   bool draw_frames_flag;
-  std::string photo_folder_path;
+  const std::string photo_folder_path;
   std::atomic<unsigned int> photo_file_counter;
 
-  void load_and_save_portait(const cv::Mat&, const helper::opencv::Face&); // launches a new thread
+  void load_and_save_portait(const cv::Mat&, helper::opencv::Face); // launches a new thread
   void render_text(const char*, double x, double y, int FontSize = 56);
   void gl_preample(); // standard gl preample setup
   boost::optional<helper::opencv::Face> detect_face(cv::Mat&,bool draw_frames = true);

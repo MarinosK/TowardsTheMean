@@ -67,11 +67,7 @@ namespace helper {
     };
     void allign_and_isolate_face(cv::Mat&, const helper::opencv::Face&);
     void pad_and_resize_photo(cv::Mat&);
-    inline double rms_distance_between_eyes(const Face& face)  {
-      auto dx = face.right_eye.x - face.left_eye.x;
-      auto dy = face.right_eye.y - face.left_eye.y;
-      return std::sqrt(std::pow(dx,2) + std::pow(dy,2));
-    }
+    double rms_distance_between_eyes(const Face& face);  
   }
   
   // opengl
