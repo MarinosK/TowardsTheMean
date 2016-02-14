@@ -9,8 +9,6 @@
 #include <string>
 #include <chrono>
 #include <vector>
-#include <thread>
-#include <atomic>
 #include <cmath>
 #include <sstream>
 #include <GL/glew.h>
@@ -43,12 +41,12 @@ private:
   FTGLPixmapFont font_m;
   double capture_counter_m;
   bool photo_capture_flag_m;
-  bool thread_launched_flag_m;
+  bool capture_done_flag_m;
   bool draw_frames_flag_m;
   const std::string photo_folder_path_m;
-  std::atomic<unsigned int> photo_file_counter_m;
+  unsigned int photo_file_counter_m;
 
-  void load_and_save_portait(const cv::Mat&, helper::opencv::Face); // launches a new thread
+  void load_and_save_portait(cv::Mat&, helper::opencv::Face); // launches a new thread
   void render_text(const char*, double x, double y, int font_size = 56);
   void gl_preample(); // standard gl preample setup
   boost::optional<helper::opencv::Face> detect_face(cv::Mat&,bool draw_frames = true);

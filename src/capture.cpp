@@ -47,7 +47,7 @@ Capture::Capture(Projection* proj) :
   font_m {FONTS_PATH "Palatino Linotype.ttf"},
   capture_counter_m {0},
   photo_capture_flag_m {false},
-  thread_launched_flag_m {false},
+  capture_done_flag_m {false},
   draw_frames_flag_m {true},
   photo_folder_path_m {create_unique_folder(PHOTOS_PATH)},
   photo_file_counter_m {1} {
@@ -124,12 +124,12 @@ void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame
 	render_text("...processing photo..",(window_width_m/2)-50,window_height_m/2);
       else { // reset
 	photo_capture_flag_m = false;
-	thread_launched_flag_m = false;	
+	capture_done_flag_m = false;	
       }
     } else {
       helper::gl::display_cv_mat(video_frame);
       if (photo_capture_flag_m) photo_capture_flag_m = false;
-      if (thread_launched_flag_m) thread_launched_flag_m = false;
+      if (capture_done_flag_m) capture_done_flag_m = false;
     }}
   catch (helper::too_many_faces_exception& e) {
     if (photo_capture_flag_m) photo_capture_flag_m = false;
@@ -138,29 +138,25 @@ void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame
   }
 }
 
-void Capture::load_and_save_portait(const cv::Mat& video_frame, helper::opencv::Face face) {
-  if (!thread_launched_flag_m) { // launch once only
-    thread_launched_flag_m = true; // thread is launched
+void Capture::load_and_save_portait(cv::Mat& video_frame, helper::opencv::Face face) {
+  if (!capture_done_flag_m) { // launch once only
+    capture_done_flag_m = true; // thread is launched
     draw_frames_flag_m = true; // draw frames again next time
-    cv::Mat photo {video_frame.clone()}; // so that we don't have any clashes with the camera
-    std::thread t{[&,this](){ // launch a new thread
-	// helper::opencv::allign_and_isolate_face(photo,face);
-	//--- save photo
-	std::ostringstream filename{};
-	filename << photo_folder_path_m << "/photo #" << photo_file_counter_m++ << ".tif"; 
-	try {
-	  cv::imwrite(filename.str(),photo);
-	  HELPER_LOG_OUT( filename.str() << " succesfully saved");	  
-	}
-	catch (std::runtime_error& e) {
-	  HELPER_LOG_ERR( "failed to write " << filename.str()
-			  << " to disc with exception: " << e.what());	  
-	}
-	// helper::opencv::pad_and_resize_photo(photo);
-	// projection_process->add_to_the_animation(photo);
-      }};
-    HELPER_LOG_OUT( "new thread with id " << t.get_id() << " launched");
-    t.detach();
+    // cv::Mat photo {video_frame.clone()}; // so that we don't have any clashes with the camera
+    // helper::opencv::allign_and_isolate_face(video_frame,face);
+    //--- save photo
+    std::ostringstream filename{};
+    filename << photo_folder_path_m << "/photo #" << photo_file_counter_m++ << ".tif"; 
+    try {
+      cv::imwrite(filename.str(),video_frame);
+      HELPER_LOG_OUT( filename.str() << " succesfully saved");	  
+    }
+    catch (std::runtime_error& e) {
+      HELPER_LOG_ERR( "failed to write " << filename.str()
+		      << " to disc with exception: " << e.what());	  
+    }
+    // helper::opencv::pad_and_resize_photo(photo);
+    // projection_process->add_to_the_animation(photo);
   }
 }
 

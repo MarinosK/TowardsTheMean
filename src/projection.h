@@ -10,7 +10,6 @@
 #include <functional>
 #include <queue>
 #include <vector>
-#include <mutex>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <boost/core/noncopyable.hpp>
@@ -29,7 +28,6 @@ private:
   double fade_counter_m;
   bool fade_in_done_m;
   bool fade_out_done_m;
-  std::mutex mutex_m;
   void fade_in_new_images(cv::Mat);
   void gl_preample(); // standard gl preample setup 
 public:
@@ -38,10 +36,7 @@ public:
   inline void resume() noexcept {running_m = true;}
   inline int get_window_width() const noexcept {return window_width_m;};
   inline int get_window_height() const noexcept {return window_height_m;};
-  inline void add_to_the_animation(const cv::Mat& mat) { // thread safe
-    std::lock_guard<std::mutex> lock(mutex_m);
-    images_to_fade_in_m.emplace(mat);
-  }
+  inline void add_to_the_animation(const cv::Mat& mat) { images_to_fade_in_m.emplace(mat); }
   Projection(); // thread safe
   inline ~Projection() { 
     glfwDestroyWindow(projection_window_m);

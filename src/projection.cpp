@@ -16,9 +16,7 @@ Projection::Projection() :
   images_to_fade_in_m {},
   fade_counter_m {0},
   fade_in_done_m {false},
-  fade_out_done_m {false},
-  mutex_m {} {
-    std::lock_guard<std::mutex> lock(mutex_m);
+  fade_out_done_m {false} {
     // load sample images to buffer
     std::vector<cv::Mat> samples {helper::loadSampleImages()};
     for (const auto& im : samples) image_buffer_m.add_image(im);
@@ -78,7 +76,6 @@ void Projection::fade_in_new_images(cv::Mat mat) {
 
 void Projection::update_frame() {
   using namespace std::placeholders;
-  std::lock_guard<std::mutex> lock(mutex_m);
   if (running_m) {
     if (glfwWindowShouldClose(projection_window_m)) // quit on escape
       throw helper::quit_program_exception();
