@@ -15,7 +15,7 @@ You need the following dependencies:
     * xcode-tools
     * cmake
     * boost  1.59
-    * openCV 3.0
+    * openCV 3.1 (the master from github, there's a bug in the current stable 3.1)
     * glfw-devel (as of February 2016)
     * glew
 	* freetype

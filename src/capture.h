@@ -31,7 +31,7 @@ private:
   GLFWwindow* capture_window_m;
   cv::VideoCapture video_capture_m;
   bool running_m;
-  Projection* projection_process_m;
+  Projection const* projection_process_m;
   cv::CascadeClassifier face_cascade_m;
   cv::CascadeClassifier eyes_cascade_m;
   int window_width_m;
@@ -43,10 +43,11 @@ private:
   bool photo_capture_flag_m;
   bool capture_done_flag_m;
   bool draw_frames_flag_m;
+  bool face_out_of_range_msg_flag_m;
   const std::string photo_folder_path_m;
   unsigned int photo_file_counter_m;
 
-  void load_and_save_portait(cv::Mat&, helper::opencv::Face); // launches a new thread
+  void load_and_save_portait(cv::Mat&, helper::opencv::Face&); 
   void render_text(const char*, double x, double y, int font_size = 56);
   void gl_preample(); // standard gl preample setup
   boost::optional<helper::opencv::Face> detect_face(cv::Mat&,bool draw_frames = true);

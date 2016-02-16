@@ -13,10 +13,9 @@
 
 namespace mar {
   
-  /// folds a container by means of applying op to pairs recursively
-  /* TODO:  some times its right-associative some time its left associative, depending on the size of the input vector.. FIX IT */
+  /// folds a container by means of applying op to pairs recursively (associativeness is not standard)
   template<class It, class Func>
-  auto binary_fold(It begin, It end, Func op) ->  decltype(op(*begin, *end)) {
+  auto binary_fold_rec(It begin, It end, Func op) ->  decltype(op(*begin, *end)) {
     std::ptrdiff_t diff = end - begin;
     switch (diff) {
       case 0: throw std::out_of_range("binary fold on empty container");
@@ -25,9 +24,9 @@ namespace mar {
       default: { // first round to the nearest multiple of 2 and then advance
 	It mid{begin};
 	int div = diff/2;
-	int offset = (div%2 == 1) ? (div+1) : div; 
+	int offset = (div%2 == 1) ? (div+1) : div; // round to the closest multiple of two (upwards)
 	std::advance(mid, offset);
-	return op( binary_fold(begin,mid,op), binary_fold(mid,end,op) );
+	return op( binary_fold_rec(begin,mid,op), binary_fold_rec(mid,end,op) );
       }
     }
   }

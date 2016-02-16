@@ -38,7 +38,7 @@ public:
     if (buffer.empty()) // faster than size() 
       throw std::out_of_range("ImageBuffer: cannot iterate at this range, index out of bounds");
 #endif // UNSAFE_OPTIMISATIONS 
-    return mar::binary_fold(buffer.begin(), buffer.end(), func);
+    return mar::binary_fold_rec(buffer.begin(), buffer.end(), func);
   }
   inline cv::Mat operator[](unsigned int index) {
 #ifndef UNSAFE_OPTIMISATIONS

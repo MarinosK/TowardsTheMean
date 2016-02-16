@@ -22,6 +22,8 @@
 #include <opencv2/opencv.hpp>
 #include "properties.h"
 
+#include "mar_util.h"
+
 namespace helper {
   
   // exceptions
@@ -65,9 +67,9 @@ namespace helper {
       cv::Rect  right_eye {};
       cv::Rect  face {};
     };
-    void allign_and_isolate_face(cv::Mat&, const helper::opencv::Face&);
+    void allign_and_isolate_face(cv::Mat&, helper::opencv::Face&);
     void pad_and_resize_photo(cv::Mat&);
-    double rms_distance_between_eyes(const Face& face);  
+    float rms_distance_between_eyes(const Face& face);  
   }
   
   // opengl

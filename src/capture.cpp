@@ -49,6 +49,7 @@ Capture::Capture(Projection* proj) :
   photo_capture_flag_m {false},
   capture_done_flag_m {false},
   draw_frames_flag_m {true},
+  face_out_of_range_msg_flag_m {false},
   photo_folder_path_m {create_unique_folder(PHOTOS_PATH)},
   photo_file_counter_m {1} {
     // ------ setup openGL
@@ -102,10 +103,11 @@ void Capture::update_frame() {
 void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame) {
   try {
     if (auto face = detect_face(video_frame, draw_frames_flag_m)) { // detect face
-      helper::gl::display_cv_mat(video_frame); 
+      helper::gl::display_cv_mat(video_frame);
+      face_out_of_range_msg_flag_m = false;
       if (!photo_capture_flag_m) { // capture
 	photo_capture_flag_m = true;
-	capture_counter_m = glfwGetTime() + 6 + WAIT_TIME_BETWEEN_PHOTOS; 
+	capture_counter_m = glfwGetTime() + 5 + WAIT_TIME_BETWEEN_PHOTOS; 
       } else if (glfwGetTime() < (capture_counter_m - photos_wait_time4))
 	render_text("Face detected! Look at the camera and stand still",10,window_height_m-76);
       else if (glfwGetTime() <= (capture_counter_m - photos_wait_time3))
@@ -138,15 +140,14 @@ void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame
   }
 }
 
-void Capture::load_and_save_portait(cv::Mat& video_frame, helper::opencv::Face face) {
+void Capture::load_and_save_portait(cv::Mat& video_frame, helper::opencv::Face& face) {
   if (!capture_done_flag_m) { // launch once only
     capture_done_flag_m = true; // thread is launched
     draw_frames_flag_m = true; // draw frames again next time
     // cv::Mat photo {video_frame.clone()}; // so that we don't have any clashes with the camera
-    // helper::opencv::allign_and_isolate_face(video_frame,face);
-    //--- save photo
+    helper::opencv::allign_and_isolate_face(video_frame,face);
     std::ostringstream filename{};
-    filename << photo_folder_path_m << "/photo #" << photo_file_counter_m++ << ".tif"; 
+    filename << photo_folder_path_m << "/photo " << photo_file_counter_m++ << ".tif"; 
     try {
       cv::imwrite(filename.str(),video_frame);
       HELPER_LOG_OUT( filename.str() << " succesfully saved");	  
@@ -172,7 +173,7 @@ boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool 
   cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
   cv::equalizeHist(frame_gray, frame_gray); // **** maybe leave out for optimisation
   face_cascade_m.detectMultiScale(frame_gray, faces, 1.1, 2, 0, cv::Size(80, 80)); // detect faces
-  if (faces.empty()) return boost::optional<helper::opencv::Face>{}; 
+  if (faces.empty()) return boost::optional<helper::opencv::Face>{};
   for (auto& face : faces) { // else for each face detect eyes
     cv::Mat faceROI = frame_gray(face);
     std::vector<cv::Rect> eyes;
@@ -183,10 +184,13 @@ boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool 
 	eye = eye + cv::Point{face.x,face.y}; // make coordinates absolute
 	if (draw_frames) cv::rectangle(frame, eye, EYES_FRAME_COLOUR);
       }
-      faceObject = {eyes[0],eyes[1],face}; // we won't have more that a couple of faces anyway so it's ok
-    }
+      // * not optimal to move for each face just to keep the last, but there won't be many faces anyway
+      faceObject.left_eye = std::move(eyes[0]);
+      faceObject.right_eye = std::move(eyes[1]);
+      faceObject.face = std::move(face);
+    } else return boost::optional<helper::opencv::Face>{}; // not considered detected unless eyes have been found!!
   }
   if (faces.size()>1) throw helper::too_many_faces_exception(); // many faces
-  else return faceObject;
+  else return boost::optional<helper::opencv::Face>{faceObject};
 }
 

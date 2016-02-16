@@ -22,27 +22,27 @@
 
 // ============================= mar_algo ==============================
 
-TEST(binary_fold, operate_on_non_balanced_containers) {
+TEST(binary_fold_rec, operate_on_non_balanced_containers) {
   std::vector<int> v = {10,10,10,10,10};
-  auto result = mar::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
+  auto result = mar::binary_fold_rec(v.cbegin(), v.cend(), std::minus<int>());
   ASSERT_EQ(result, 10);
 }
 
-TEST(binary_fold, operate_on_non_balanced_containers2) {
+TEST(binary_fold_rec, operate_on_non_balanced_containers2) {
   std::vector<int> v = {1,3,5,6,1};
-  auto result = mar::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
+  auto result = mar::binary_fold_rec(v.cbegin(), v.cend(), std::minus<int>());
   ASSERT_EQ(result, 0);
 }
 
-TEST(binary_fold, operate_on_balanced_containers) {
+TEST(binary_fold_rec, operate_on_balanced_containers) {
   std::vector<int> v = {5,4,3,2};
-  auto result = mar::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
+  auto result = mar::binary_fold_rec(v.cbegin(), v.cend(), std::minus<int>());
   ASSERT_EQ(result, 0);
 }
 
-TEST(binary_fold, operate_on_balanced_containers2) {
+TEST(binary_fold_rec, operate_on_balanced_containers2) {
   std::vector<int> v = {7,4,9,2,6,8};
-  auto result = mar::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
+  auto result = mar::binary_fold_rec(v.cbegin(), v.cend(), std::minus<int>());
   ASSERT_EQ(result,-2);
 }
 
