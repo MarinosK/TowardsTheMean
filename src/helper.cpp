@@ -67,7 +67,7 @@ const unsigned short& properties::max_images_in_loop {helper_internal::max_image
 const float& properties::new_image_fadein_time {helper_internal::new_image_fadein_time};
 const unsigned int& properties::capture_screen_width {helper_internal::capture_screen_width};
 const unsigned int& properties::capture_screen_height {helper_internal::capture_screen_height};
-const unsigned int& properties::captured_image_width {helper_internal::captured_image_height};
+const unsigned int& properties::captured_image_width {helper_internal::captured_image_width};
 const unsigned int& properties::captured_image_height {helper_internal::captured_image_height};
 const int& properties::vsync {helper_internal::vsync};
 const unsigned short& properties::anti_alliasing {helper_internal::anti_alliasing};
@@ -152,6 +152,8 @@ float helper::opencv::rms_distance_between_eyes(const Face& face)  {
   return std::sqrt(std::pow(dx,2) + std::pow(dy,2));
 }
 
+
+
 void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Face& face) {
 
   // add a 30% white coloured border so that rotation/scaling will not reveal any black background (also update the face's coordinates)
@@ -162,71 +164,33 @@ void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Fac
   face.left_eye += offset;
   face.right_eye += offset;
   face.face += offset;
-
   
-  // const float angle { std::atan(static_cast<float>(face.left_eye.y-face.right_eye.y),
-  // 				static_cast<float>(face.left_eye.x-face.right_eye.x)) };  
+  // detect the center of the eyes and the center of the face
+  const cv::Point2f left_eye {face.left_eye.x + static_cast<float>(face.left_eye.width) / 2,
+      face.left_eye.y + static_cast<float>(face.left_eye.height) / 2};
+  const cv::Point2f right_eye {face.right_eye.x + static_cast<float>(face.right_eye.width) / 2,
+      face.right_eye.y + static_cast<float>(face.right_eye.height) / 2};
+  const cv::Point2f center_of_the_face {face.face.x + static_cast<float>(face.face.width) / 2,
+      face.face.y + static_cast<float>(face.face.height) / 2};
 
-  
-  // constexpr float isolate_percentage {0.4};
+  // calculate the affine trasform matrix
+  cv::Point2f source_points[3] { left_eye, right_eye, center_of_the_face };
+  float l_eye_pct {0.33};
+  float r_eye_pct {0.66};
+  float eyes_level_pct {0.4};
+  static cv::Point2f destination_points[3] = { 
+    cv::Point2f{static_cast<float>(properties::captured_image_width) * l_eye_pct, 
+		static_cast<float>(properties::captured_image_height) * eyes_level_pct},
+    cv::Point2f{static_cast<float>(properties::captured_image_width) * r_eye_pct,
+		static_cast<float>(properties::captured_image_height) * eyes_level_pct},
+    cv::Point2f{static_cast<float>(properties::captured_image_width)/2,
+		static_cast<float>(properties::captured_image_height)/2}
+  };
+  auto warp_mat = cv::getAffineTransform( source_points, destination_points );
 
-  // const float offset_horizontal = isolate_percentage * properties::captured_image_width;
-  // const float offset_vertical = isolate_percentage * properties::captured_image_height;
-
-  // // rotate
-  // const float distance {helper::opencv::rms_distance_between_eyes(face)};
-  // const float reference_eye_width {properties::captured_image_width - 2 * offset_horizontal};
-  // const float scale_factor {distance / reference_eye_width};
-  // const float angle { -std::atan2(static_cast<float>(face.right_eye.y-face.left_eye.y),
-  //   static_cast<float>(face.right_eye.x-face.left_eye.x)) };  
-  // const auto cosine = std::cos(angle);
-  // const auto sine = std::sin(angle);
-  // cv::Mat warp_matrix {2,3,CV_32FC1};
-  // warp_matrix.at<float>(0,0) = cosine;
-  // warp_matrix.at<float>(0,1) = sine;
-  // warp_matrix.at<float>(0,2) = face.left_eye.x - face.left_eye.x * cosine - face.left_eye.y * sine;
-  // warp_matrix.at<float>(1,0) = -sine;
-  // warp_matrix.at<float>(1,1) = cosine;
-  // warp_matrix.at<float>(1,2) = face.left_eye.y - face.left_eye.x * (-sine) - face.left_eye.y * cosine; 
-  // cv::warpAffine( photo, photo, warp_matrix, photo.size());
-
-  // # crop the rotated image
-  // crop_xy = (eye_left[0] - scale*offset_h, eye_left[1] - scale*offset_v)
-  // crop_size = (dest_sz[0]*scale, dest_sz[1]*scale)
-  // image = image.crop((int(crop_xy[0]), int(crop_xy[1]), int(crop_xy[0]+crop_size[0]), int(crop_xy[1]+crop_size[1])))
-  // # resize it
-  // image = image.resize(dest_sz, Image.ANTIALIAS)
-  
-  // const unsigned int offset_horizontal =
-  //   { static_cast<unsigned int>(std::floor(isolate_offset * photo.cols)) };
-  // const unsigned int offset_vertical =
-  //   { static_cast<unsigned int>(std::floor( isolate_offset * photo.rows)) };
-
-  // -- rotate
- 
-
-  // center the eyes
-  
-  // -- crop face
-  // constexpr float crop_factor_horizontal {1.3}; // -> percentage around face that should be captured
-  // constexpr float crop_factor_vertical {1.5}; // -> percentage around face that should be captured
-  // constexpr float crop_x_position_factor {(1 - crop_factor_horizontal) / 2};
-  // constexpr float crop_y_position_factor {(1 - crop_factor_vertical) / 2};
-  // const unsigned int crop_x {static_cast<unsigned int>(std::fdim(face.face.x, face.face.width*crop_x_position_factor))};
-  // const unsigned int crop_y {static_cast<unsigned int>(std::fdim(face.face.y, face.face.height*crop_y_position_factor))};
-  // const unsigned int crop_width {static_cast<unsigned int>(
-  //     std::fmin(face.face.width * crop_factor_horizontal,photo.cols - crop_x))};
-  // const unsigned int crop_height {static_cast<unsigned int>(
-  //     std::fmin(face.face.height * crop_factor_horizontal,photo.rows - crop_y))};
- 
-  // std::cout << crop_x << "," << crop_y << "," <<crop_width<< "," <<crop_height << std::endl;
-  // std::cout << photo.cols<< "," << photo.rows << std::endl;
-  // photo = photo(cv::Rect(crop_x,crop_y,crop_width,crop_height)).clone(); // **** maybe not clone ?? this is expensive..
-  // -- scale
-  // const cv::Size2i new_size = {
-  //   static_cast<int>(properties::captured_image_width), static_cast<int>(properties::captured_image_height)
-  // };
-  // cv::resize(photo,photo,new_size);
+  // apply the transform and crop
+  cv:: warpAffine(photo, photo, warp_mat,
+		   cv::Size(properties::captured_image_width,properties::captured_image_height));
 }
 
 // ============================= opengl ============================== 

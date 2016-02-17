@@ -72,7 +72,7 @@ TEST(helper_parametrise, throw_exception_on_help) {
 
 TEST(helper_loadSampleImages, vector_size_is_correct) {
     std::vector<cv::Mat> images {helper::loadSampleImages()}; // should be 10 images
-    ASSERT_EQ(images.size(),10);
+    ASSERT_EQ(images.size(),9);
 }
 
 // ============================= ImageBuffer =============================

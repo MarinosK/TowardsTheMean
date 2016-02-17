@@ -16,8 +16,10 @@
 #define ASSETS_PATH "./assets/" 
 #define FACE_CASCADE ASSETS_PATH "lbpcascade_frontalface.xml" 
 #define EYES_CASCADE ASSETS_PATH "haarcascade_eye_tree_eyeglasses.xml" 
+#define MOUTH_CASCADE ASSETS_PATH "haarcascade_mcs_mouth.xml"
 #define FACE_FRAME_COLOUR cv::Scalar(255,0,0) 
 #define EYES_FRAME_COLOUR cv::Scalar(255,0,255) 
+#define MOUTH_FRAME_COLOUR cv::Scalar(0,255,0) 
 #define LOGGING_FILE_PATH "./logs/%Y-%m-%d_%H-%M-%S.%N.log"
 #define ANIMATION_SPEED 1 // large values => slower speed
 #define CAMERA_INDEX 0 

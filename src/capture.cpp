@@ -40,6 +40,7 @@ Capture::Capture(Projection* proj) :
   projection_process_m {proj},
   face_cascade_m {},
   eyes_cascade_m {},
+  mouth_cascade_m {},
   window_width_m {},
   window_height_m {},
   camera_width_m {},
@@ -72,7 +73,9 @@ Capture::Capture(Projection* proj) :
     if (!face_cascade_m.load(FACE_CASCADE))
       throw std::runtime_error("Failed to load face cascade classfier");
     if (!eyes_cascade_m.load(EYES_CASCADE))
-      throw std::runtime_error("Failed to load face cascade classfier");
+      throw std::runtime_error("Failed to load eyes cascade classfier");
+    // if (!mouth_cascade_m.load(MOUTH_CASCADE))
+    //   throw std::runtime_error("Failed to load mouth cascade classfier");
   }
 
 void Capture::gl_preample() {
@@ -174,21 +177,26 @@ boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool 
   cv::equalizeHist(frame_gray, frame_gray); // **** maybe leave out for optimisation
   face_cascade_m.detectMultiScale(frame_gray, faces, 1.1, 2, 0, cv::Size(80, 80)); // detect faces
   if (faces.empty()) return boost::optional<helper::opencv::Face>{};
-  for (auto& face : faces) { // else for each face detect eyes
+  for (auto& face : faces) { // else for each face detect eyes/mouth
     cv::Mat faceROI = frame_gray(face);
     std::vector<cv::Rect> eyes;
-    eyes_cascade_m.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,cv::Size(30, 30)); 
-    if( eyes.size() == 2) {
+    // std::vector<cv::Rect> mouth;
+    eyes_cascade_m.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,cv::Size(30, 30));
+    //  mouth_cascade_m.detectMultiScale(faceROI, mouth, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,cv::Size(30, 30));
+    if (eyes.size() == 2) { // && mouth.size() == 1) {
       if (draw_frames) cv::rectangle(frame, face, FACE_FRAME_COLOUR);
       for (auto& eye : eyes) {
 	eye = eye + cv::Point{face.x,face.y}; // make coordinates absolute
 	if (draw_frames) cv::rectangle(frame, eye, EYES_FRAME_COLOUR);
       }
+      //     mouth[0] = mouth[0] + cv::Point{face.x,face.y}; // make coordinates absolute
+      // if (draw_frames) cv::rectangle(frame, mouth[0], MOUTH_FRAME_COLOUR);
       // * not optimal to move for each face just to keep the last, but there won't be many faces anyway
       faceObject.left_eye = std::move(eyes[0]);
       faceObject.right_eye = std::move(eyes[1]);
       faceObject.face = std::move(face);
-    } else return boost::optional<helper::opencv::Face>{}; // not considered detected unless eyes have been found!!
+//      faceObject.mouth = std::move(mouth[0]);
+    } else return boost::optional<helper::opencv::Face>{}; // not detected unless both eyes/mouth have been found!!
   }
   if (faces.size()>1) throw helper::too_many_faces_exception(); // many faces
   else return boost::optional<helper::opencv::Face>{faceObject};

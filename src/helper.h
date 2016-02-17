@@ -10,7 +10,7 @@
 #include <exception>
 #include <vector>
 #include <cmath>
-#include <array>
+// #include <array>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <boost/log/core.hpp>
@@ -43,6 +43,10 @@ namespace helper {
   public:
     inline no_cv_data_exception() {};
   };
+  class failed_to_allign_image_exception: public std::exception {
+  public:
+    inline failed_to_allign_image_exception() {};
+  };
 
   // logging
   namespace logging {
@@ -63,9 +67,10 @@ namespace helper {
   // opencv
   namespace opencv {
     struct Face {
-      cv::Rect  left_eye {};
-      cv::Rect  right_eye {};
-      cv::Rect  face {};
+      cv::Rect left_eye {};
+      cv::Rect right_eye {};
+      cv::Rect face {};
+      // cv::Rect mouth {};
     };
     void allign_and_isolate_face(cv::Mat&, helper::opencv::Face&);
     void pad_and_resize_photo(cv::Mat&);

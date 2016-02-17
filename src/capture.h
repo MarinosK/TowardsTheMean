@@ -34,6 +34,7 @@ private:
   Projection const* projection_process_m;
   cv::CascadeClassifier face_cascade_m;
   cv::CascadeClassifier eyes_cascade_m;
+  cv::CascadeClassifier mouth_cascade_m;
   int window_width_m;
   int window_height_m;
   unsigned int camera_width_m;
