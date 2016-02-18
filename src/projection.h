@@ -17,6 +17,8 @@
 #include "helper.h"
 #include "imageBuffer.h"
 
+#include "mar_util.h"
+
 class Projection : private boost::noncopyable {
 private:
   GLFWwindow* projection_window_m;
@@ -28,7 +30,7 @@ private:
   double fade_counter_m;
   bool fade_in_done_m;
   bool fade_out_done_m;
-  void fade_in_new_images(cv::Mat);
+  void fade_in_new_images(cv::Mat&);
   void gl_preample(); // standard gl preample setup 
 public:
   void update_frame(); // generate next frame & detection face (thread safe)

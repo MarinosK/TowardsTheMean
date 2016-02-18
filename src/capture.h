@@ -31,10 +31,9 @@ private:
   GLFWwindow* capture_window_m;
   cv::VideoCapture video_capture_m;
   bool running_m;
-  Projection const* projection_process_m;
+  Projection* projection_process_m;
   cv::CascadeClassifier face_cascade_m;
   cv::CascadeClassifier eyes_cascade_m;
-  cv::CascadeClassifier mouth_cascade_m;
   int window_width_m;
   int window_height_m;
   unsigned int camera_width_m;

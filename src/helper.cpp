@@ -156,39 +156,50 @@ float helper::opencv::rms_distance_between_eyes(const Face& face)  {
 
 void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Face& face) {
 
-  // add a 30% white coloured border so that rotation/scaling will not reveal any black background (also update the face's coordinates)
+  // add a 30% white border so that rotation/scaling will not reveal any black background (also update the face's coordinates)
   const int border_size {photo.cols / 3};
   cv::copyMakeBorder(photo, photo, border_size, border_size, border_size, border_size,
-  		     cv::BORDER_CONSTANT, cv::Scalar(255,255,255));
+  		     cv::BORDER_REPLICATE, cv::Scalar(255,255,255));
   const cv::Point offset {border_size,border_size};
   face.left_eye += offset;
   face.right_eye += offset;
   face.face += offset;
   
-  // detect the center of the eyes and the center of the face
-  const cv::Point2f left_eye {face.left_eye.x + static_cast<float>(face.left_eye.width) / 2,
+  // detect the center of the eyes and a third point in the source image
+  const cv::Point2f left_eye_src {face.left_eye.x + static_cast<float>(face.left_eye.width) / 2,
       face.left_eye.y + static_cast<float>(face.left_eye.height) / 2};
-  const cv::Point2f right_eye {face.right_eye.x + static_cast<float>(face.right_eye.width) / 2,
+  const cv::Point2f right_eye_src {face.right_eye.x + static_cast<float>(face.right_eye.width) / 2,
       face.right_eye.y + static_cast<float>(face.right_eye.height) / 2};
-  const cv::Point2f center_of_the_face {face.face.x + static_cast<float>(face.face.width) / 2,
-      face.face.y + static_cast<float>(face.face.height) / 2};
+  constexpr float sin60 {0.86f}; // sin(60 * M_PI / 180)
+  constexpr float cos60 {0.49f}; // cos(60 * M_PI / 180)
+  const float third_point_src_x {cos60 * (left_eye_src.x - right_eye_src.x) -
+      sin60 * (left_eye_src.y - right_eye_src.y) + right_eye_src.x};
+  float third_point_src_y {sin60 * (left_eye_src.x - right_eye_src.x) +
+      cos60 * (left_eye_src.y - right_eye_src.y) + right_eye_src.y};
+  if (third_point_src_y < left_eye_src.y) // make sure the point is below the eye level
+    third_point_src_y = 2 * left_eye_src.y - third_point_src_y;
+  const cv::Point2f third_point_src {third_point_src_x, third_point_src_y};
+  cv::Point2f source_points[3] { left_eye_src, right_eye_src, third_point_src };
 
-  // calculate the affine trasform matrix
-  cv::Point2f source_points[3] { left_eye, right_eye, center_of_the_face };
-  float l_eye_pct {0.33};
-  float r_eye_pct {0.66};
-  float eyes_level_pct {0.4};
-  static cv::Point2f destination_points[3] = { 
-    cv::Point2f{static_cast<float>(properties::captured_image_width) * l_eye_pct, 
-		static_cast<float>(properties::captured_image_height) * eyes_level_pct},
-    cv::Point2f{static_cast<float>(properties::captured_image_width) * r_eye_pct,
-		static_cast<float>(properties::captured_image_height) * eyes_level_pct},
-    cv::Point2f{static_cast<float>(properties::captured_image_width)/2,
-		static_cast<float>(properties::captured_image_height)/2}
-  };
-  auto warp_mat = cv::getAffineTransform( source_points, destination_points );
+  // calculate the destination points to calculate the Affine Matrix
+  constexpr float l_eye_pct {0.40f};
+  constexpr float r_eye_pct {0.59f};
+  constexpr float eyes_level_pct {0.43f};
+  const cv::Point2f left_eye_dst {static_cast<float>(properties::captured_image_width) * l_eye_pct, 
+      static_cast<float>(properties::captured_image_height) * eyes_level_pct};
+  const cv::Point2f right_eye_dst {static_cast<float>(properties::captured_image_width) * r_eye_pct,
+      static_cast<float>(properties::captured_image_height) * eyes_level_pct};
+  const float third_point_dst_x {cos60 * (left_eye_dst.x - right_eye_dst.x) -
+      sin60 * (left_eye_dst.y - right_eye_dst.y) + right_eye_dst.x};
+  float third_point_dst_y {sin60 * (left_eye_dst.x - right_eye_dst.x) +
+      cos60 * (left_eye_dst.y - right_eye_dst.y) + right_eye_dst.y};
+  if (third_point_dst_y < left_eye_dst.y) // make sure the point is below the eye level
+    third_point_dst_y = 2 * left_eye_dst.y - third_point_dst_y;
+  const cv::Point2f third_point_dst {third_point_dst_x, third_point_dst_y};
+  static cv::Point2f destination_points[3] = {left_eye_dst, right_eye_dst, third_point_dst};
 
   // apply the transform and crop
+  auto warp_mat = cv::getAffineTransform( source_points, destination_points );
   cv:: warpAffine(photo, photo, warp_mat,
 		   cv::Size(properties::captured_image_width,properties::captured_image_height));
 }

@@ -16,20 +16,20 @@
 #define ASSETS_PATH "./assets/" 
 #define FACE_CASCADE ASSETS_PATH "lbpcascade_frontalface.xml" 
 #define EYES_CASCADE ASSETS_PATH "haarcascade_eye_tree_eyeglasses.xml" 
-#define MOUTH_CASCADE ASSETS_PATH "haarcascade_mcs_mouth.xml"
+// #define MOUTH_CASCADE ASSETS_PATH "mouth.xml"
 #define FACE_FRAME_COLOUR cv::Scalar(255,0,0) 
 #define EYES_FRAME_COLOUR cv::Scalar(255,0,255) 
-#define MOUTH_FRAME_COLOUR cv::Scalar(0,255,0) 
+// #define MOUTH_FRAME_COLOUR cv::Scalar(0,255,0) 
 #define LOGGING_FILE_PATH "./logs/%Y-%m-%d_%H-%M-%S.%N.log"
 #define ANIMATION_SPEED 1 // large values => slower speed
 #define CAMERA_INDEX 0 
-#define MAX_IMAGES_IN_LOOP 40 
+#define MAX_IMAGES_IN_LOOP 10
 #define NEW_IMAGE_FADEIN_TIME 20 // seconds
 #define VSYNC 1 // the swapping buffer interval
 #define ANTI_ALLIASING 4
 #define BACKGROUND_COLOUR 0.f, 0.f, 0.f, 1.f
-#define CAPTURED_IMAGE_WIDTH 640   // this should probably match the camera's width
-#define CAPTURED_IMAGE_HEIGHT 480  // this should probably match the camera's height
+#define CAPTURED_IMAGE_WIDTH 1024   // this should probably match the camera's width
+#define CAPTURED_IMAGE_HEIGHT 768  // this should probably match the camera's height
 #define FONTS_PATH ASSETS_PATH "fonts/"
 #define PHOTOS_PATH "./photos/"
 #define WAIT_TIME_BETWEEN_PHOTOS 10 // seconds

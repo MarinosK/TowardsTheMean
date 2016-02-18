@@ -15,8 +15,8 @@ Projection::Projection() :
   window_height_m {},
   images_to_fade_in_m {},
   fade_counter_m {0},
-  fade_in_done_m {false},
-  fade_out_done_m {false} {
+  fade_in_done_m {true},
+  fade_out_done_m {true} {
     // load sample images to buffer
     std::vector<cv::Mat> samples {helper::loadSampleImages()};
     for (const auto& im : samples) image_buffer_m.add_image(im);
@@ -45,7 +45,7 @@ void Projection::gl_preample() {
   glLoadIdentity(); 
 }
 
-void Projection::fade_in_new_images(cv::Mat mat) {
+void Projection::fade_in_new_images(cv::Mat& mat) {
   if (!images_to_fade_in_m.empty()) { // if not empty
     if (fade_in_done_m && fade_out_done_m) { // if previous fades are done then start new fade_in
       fade_counter_m = glfwGetTime() + properties::new_image_fadein_time;
@@ -54,8 +54,9 @@ void Projection::fade_in_new_images(cv::Mat mat) {
     if (!fade_in_done_m && fade_out_done_m) { // fading in
       float weight_a =  (fade_counter_m - glfwGetTime()) / properties::new_image_fadein_time;
       float weight_b =  1.f - weight_a;
+      // std::cout << "fading in" << std::endl;
       cv::addWeighted(mat,weight_a,images_to_fade_in_m.front(),weight_b, 0, mat);
-      if (fade_counter_m >= glfwGetTime()) { // when done start a new fade_out
+      if (fade_counter_m <= glfwGetTime()) { // when done start a new fade_out
 	fade_in_done_m = true;
 	fade_out_done_m = false;
 	fade_counter_m = glfwGetTime() + properties::new_image_fadein_time; // reset counter
@@ -65,8 +66,10 @@ void Projection::fade_in_new_images(cv::Mat mat) {
       float weight_b =  (fade_counter_m - glfwGetTime()) / properties::new_image_fadein_time;
       float weight_a =  1.f - weight_b;
       cv::addWeighted(mat,weight_a,images_to_fade_in_m.front(),weight_b, 0, mat);
-      if (fade_counter_m >= glfwGetTime()) { // when done start a new fade_out
+      // std::cout << "fading out" << std::endl;
+      if (fade_counter_m <= glfwGetTime()) { 
 	fade_out_done_m = true;
+	fade_in_done_m = false;
 	image_buffer_m.add_image(images_to_fade_in_m.front()); // pop and add to the image_buffer
 	images_to_fade_in_m.pop();
       }

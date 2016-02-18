@@ -40,7 +40,6 @@ Capture::Capture(Projection* proj) :
   projection_process_m {proj},
   face_cascade_m {},
   eyes_cascade_m {},
-  mouth_cascade_m {},
   window_width_m {},
   window_height_m {},
   camera_width_m {},
@@ -74,8 +73,6 @@ Capture::Capture(Projection* proj) :
       throw std::runtime_error("Failed to load face cascade classfier");
     if (!eyes_cascade_m.load(EYES_CASCADE))
       throw std::runtime_error("Failed to load eyes cascade classfier");
-    // if (!mouth_cascade_m.load(MOUTH_CASCADE))
-    //   throw std::runtime_error("Failed to load mouth cascade classfier");
   }
 
 void Capture::gl_preample() {
@@ -111,9 +108,10 @@ void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame
       if (!photo_capture_flag_m) { // capture
 	photo_capture_flag_m = true;
 	capture_counter_m = glfwGetTime() + 5 + WAIT_TIME_BETWEEN_PHOTOS; 
-      } else if (glfwGetTime() < (capture_counter_m - photos_wait_time4))
+      } else if (glfwGetTime() < (capture_counter_m - photos_wait_time4)) {
+	draw_frames_flag_m = true;
 	render_text("Face detected! Look at the camera and stand still",10,window_height_m-76);
-      else if (glfwGetTime() <= (capture_counter_m - photos_wait_time3))
+      } else if (glfwGetTime() <= (capture_counter_m - photos_wait_time3))
 	render_text("3",window_width_m/2,window_height_m/2,200);
       else if (glfwGetTime() <= (capture_counter_m - photos_wait_time2)) 
 	render_text("2",window_width_m/2,window_height_m/2,200);
@@ -159,8 +157,7 @@ void Capture::load_and_save_portait(cv::Mat& video_frame, helper::opencv::Face& 
       HELPER_LOG_ERR( "failed to write " << filename.str()
 		      << " to disc with exception: " << e.what());	  
     }
-    // helper::opencv::pad_and_resize_photo(photo);
-    // projection_process->add_to_the_animation(photo);
+    projection_process_m->add_to_the_animation(video_frame);
   }
 }
 
@@ -180,22 +177,17 @@ boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool 
   for (auto& face : faces) { // else for each face detect eyes/mouth
     cv::Mat faceROI = frame_gray(face);
     std::vector<cv::Rect> eyes;
-    // std::vector<cv::Rect> mouth;
     eyes_cascade_m.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,cv::Size(30, 30));
-    //  mouth_cascade_m.detectMultiScale(faceROI, mouth, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,cv::Size(30, 30));
-    if (eyes.size() == 2) { // && mouth.size() == 1) {
+    if (eyes.size() == 2) {
       if (draw_frames) cv::rectangle(frame, face, FACE_FRAME_COLOUR);
       for (auto& eye : eyes) {
 	eye = eye + cv::Point{face.x,face.y}; // make coordinates absolute
 	if (draw_frames) cv::rectangle(frame, eye, EYES_FRAME_COLOUR);
       }
-      //     mouth[0] = mouth[0] + cv::Point{face.x,face.y}; // make coordinates absolute
-      // if (draw_frames) cv::rectangle(frame, mouth[0], MOUTH_FRAME_COLOUR);
       // * not optimal to move for each face just to keep the last, but there won't be many faces anyway
       faceObject.left_eye = std::move(eyes[0]);
       faceObject.right_eye = std::move(eyes[1]);
       faceObject.face = std::move(face);
-//      faceObject.mouth = std::move(mouth[0]);
     } else return boost::optional<helper::opencv::Face>{}; // not detected unless both eyes/mouth have been found!!
   }
   if (faces.size()>1) throw helper::too_many_faces_exception(); // many faces
