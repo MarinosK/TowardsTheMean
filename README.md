@@ -1,4 +1,4 @@
-## TowardsThemean ##
+## Towards The Mean ##
 
 Interactive Photo Installation (c) 2016
 Concept: Marianne Holm Hansen
@@ -6,20 +6,22 @@ Software Develoment: Marinos Koutsomichalis <marinos@marinoskoutsomichalis.com>
 
 This code is distributed under the Attribution-NonCommercial-ShareAlike 3.0 Unported Creative Commons Licence (details here: http://creativecommons.org/licenses/by-nc-sa/3.0/deed.en_US).
 
-> THIS SOFTWARE IS DISTRIBUTED AS IS WITH NO GUARANTEE OF FUNCTIONALITY OR RELEVANCE TO THIRD PARTY PROJECTS - THE DEVELOPER IS NOT TO BE HELD RESPONSIBLE FOR PERSONAL INJURIES, HARDWARE, FINANCIAL, OR ANY OTHER LOSSES AND IN GENERAL FOR ANY MISFORTUNATE EVENT CAUSED BY THE DESCRIBED SOFTWARE/HARDWARE OR IN THE PROCESS OF ATTEMPTING TO IMPLEMENT IT. IF YOU DON'T AGREE WITH THE AFOREMENTIONED YOUR ARE NOT ALLOWED TO USE THE MATERIAL PROVIDED HEREIN
+> THIS SOFTWARE IS DISTRIBUTED AS IS WITH NO GUARANTEE OF FUNCTIONALITY OR RELEVANCE TO THIRD PARTY PROJECTS - THE DEVELOPER IS NOT TO BE HELD RESPONSIBLE FOR PERSONAL INJURIES, HARDWARE, FINANCIAL, OR ANY OTHER LOSSES AND IN GENERAL FOR ANY MISFORTUNATE EVENT CAUSED BY THE DESCRIBED SOFTWARE OR IN THE PROCESS OF ATTEMPTING TO IMPLEMENT IT. IF YOU DON'T AGREE WITH THE AFOREMENTIONED YOUR ARE NOT ALLOWED TO USE THE MATERIAL PROVIDED HEREIN
 
 # To Compile #
 
 You need the following dependencies:
+
     * xcode
     * xcode-tools
     * cmake
     * boost  1.59
-    * openCV 3.1 (the master from github, there's a bug in the current stable 3.1)
+    * openCV 3.1 (the master from github (February 2016))
     * glfw-devel (as of February 2016)
     * glew
 	* freetype
 	* ftgl
+	
 (you might have to edit CMakeLists.txt to update certain paths, etc)
 
 then try:
@@ -32,9 +34,9 @@ then try:
 
 this will create an Install folder with the executable, the data assets, and the tests. Options are as follows:
 
-    * -DCMAKE_BUILD_MODE=Debug or =Release -> to switch between debug/release builds,default it Release
+    * -DCMAKE_BUILD_MODE=Debug or =Release -> to switch between debug/release builds, default is Debug
     * -DTEST_MODE=OFF -> do not compile/run the tests
-	* -DCMAKE_LINKAGE=Static or =Dynamic -> link against dynamic/static libraries
+	* -DCMAKE_LINKAGE=Static or =Dynamic -> link against dynamic/static libraries (currently only dynamic linking supported)
 
 more, there are a number of properties that can be defined in compile time (check properties.h)
 

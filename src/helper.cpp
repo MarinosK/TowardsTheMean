@@ -160,7 +160,7 @@ void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Fac
   const int border_size {photo.cols / 3};
   cv::copyMakeBorder(photo, photo, border_size, border_size, border_size, border_size,
   		     cv::BORDER_REPLICATE, cv::Scalar(255,255,255));
-  const cv::Point offset {border_size,border_size};
+  const cv::Point offset {border_size, border_size};
   face.left_eye += offset;
   face.right_eye += offset;
   face.face += offset;
