@@ -143,10 +143,11 @@ void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame
 
 void Capture::load_and_save_portait(cv::Mat& video_frame, helper::opencv::Face& face) {
   if (!capture_done_flag_m) { // launch once only
-    capture_done_flag_m = true; // thread is launched
-    draw_frames_flag_m = true; // draw frames again next time
+    capture_done_flag_m = true; 
+    draw_frames_flag_m = true;
     // cv::Mat photo {video_frame.clone()}; // so that we don't have any clashes with the camera
     helper::opencv::allign_and_isolate_face(video_frame,face);
+    cv::normalize(video_frame, video_frame, 0, 255, cv::NORM_MINMAX); // normalize
     std::ostringstream filename{};
     filename << photo_folder_path_m << "/photo " << photo_file_counter_m++ << ".tif"; 
     try {
