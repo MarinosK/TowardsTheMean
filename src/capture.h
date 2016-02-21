@@ -27,7 +27,7 @@
 
 class Capture : private boost::noncopyable {
 private:
-  
+  static const std::string photo_folder_path_m;
   GLFWwindow* capture_window_m;
   cv::VideoCapture video_capture_m;
   bool running_m;
@@ -44,7 +44,6 @@ private:
   bool capture_done_flag_m;
   bool draw_frames_flag_m;
   bool face_out_of_range_msg_flag_m;
-  const std::string photo_folder_path_m;
   unsigned int photo_file_counter_m;
 
   void load_and_save_portait(cv::Mat&, helper::opencv::Face&); 
@@ -72,6 +71,7 @@ public:
   inline void resume() {running_m = true;}
   inline int get_window_width() const noexcept {return window_width_m;};
   inline int get_window_height() const noexcept {return window_height_m;};
+  static inline std::string get_photo_folder_path() noexcept {return photo_folder_path_m;};
   explicit Capture(Projection*); 
   inline ~Capture() {
     glfwDestroyWindow(capture_window_m);

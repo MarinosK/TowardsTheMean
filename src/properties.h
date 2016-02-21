@@ -14,12 +14,10 @@
 // #define COLOR_MODE CV_LOAD_IMAGE_COLOR
 #define QUIT_AFTER_MINUTES 600 
 #define ASSETS_PATH "./assets/" 
-#define FACE_CASCADE ASSETS_PATH "lbpcascade_frontalface.xml" 
+#define FACE_CASCADE ASSETS_PATH "haarcascade_frontalface_alt2.xml" 
 #define EYES_CASCADE ASSETS_PATH "haarcascade_eye_tree_eyeglasses.xml" 
-// #define MOUTH_CASCADE ASSETS_PATH "mouth.xml"
 #define FACE_FRAME_COLOUR cv::Scalar(255,0,0) 
 #define EYES_FRAME_COLOUR cv::Scalar(255,0,255) 
-// #define MOUTH_FRAME_COLOUR cv::Scalar(0,255,0) 
 #define LOGGING_FILE_PATH "./logs/%Y-%m-%d_%H-%M-%S.%N.log"
 #define ANIMATION_SPEED 1 // large values => slower speed
 #define CAMERA_INDEX 0 
@@ -32,6 +30,7 @@
 #define CAPTURED_IMAGE_HEIGHT 768  // this should probably match the camera's height
 #define FONTS_PATH ASSETS_PATH "fonts/"
 #define PHOTOS_PATH "./photos/"
+#define SESSION_AVERAGE_PATH "./session_average/"
 #define WAIT_TIME_BETWEEN_PHOTOS 10 // seconds
 
 

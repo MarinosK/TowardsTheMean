@@ -31,6 +31,8 @@ static std::string create_unique_folder(std::string root) {
   return folder.str();
 }
 
+const std::string Capture::photo_folder_path_m {create_unique_folder(PHOTOS_PATH)};
+
 Capture::Capture(Projection* proj) :
   capture_window_m { glfwCreateWindow(
     properties::capture_screen_width,properties::capture_screen_height,
@@ -50,7 +52,6 @@ Capture::Capture(Projection* proj) :
   capture_done_flag_m {false},
   draw_frames_flag_m {true},
   face_out_of_range_msg_flag_m {false},
-  photo_folder_path_m {create_unique_folder(PHOTOS_PATH)},
   photo_file_counter_m {1} {
     // ------ setup openGL
     if (!capture_window_m) throw std::runtime_error("Did not manage to create Capture Window");

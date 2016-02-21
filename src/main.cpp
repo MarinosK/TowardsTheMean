@@ -4,9 +4,9 @@
 */
 
 #include <chrono>
-#include <mar_util.h>
 #include <thread>
 #include <atomic>
+#include <sstream>
 #include <opencv2/core.hpp>
 #include "properties.h"
 #include "helper.h"
@@ -25,25 +25,24 @@ int main( int argc, char** argv) {
     clock::time_point program_start_time {clock::now()};
     helper::logging::setup();
     helper::parametrise(argc, argv);
-    // helper::create_session_image_folder(); 
     helper::gl::setup();
     Projection proj {}; 
     Capture cap {&proj}; // capture, allign, save to disk and pass to the projection process
     std::atomic<bool> program_should_quit {false};
     // --------------- quit after the user-defined number of minutes ------------------
     std::thread quit_after_minutes {[&]{ while (true) {
-	  clock::time_point time_flag_now {clock::now()};
-	  auto elapsed_minutes_from_launch = std::chrono::duration_cast<minutes>
-	    (time_flag_now - program_start_time);
-	  if (elapsed_minutes_from_launch.count() >= properties::quit_after_minutes)
-	    program_should_quit = true;
-	  std::this_thread::sleep_for(30s); // we don't need better accuracy really..
-	}}};
+    	  clock::time_point time_flag_now {clock::now()};
+    	  auto elapsed_minutes_from_launch = std::chrono::duration_cast<minutes>
+    	    (time_flag_now - program_start_time);
+    	  if (elapsed_minutes_from_launch.count() >= properties::quit_after_minutes)
+    	    program_should_quit = true;
+    	  std::this_thread::sleep_for(30s); // we don't need better accuracy really..
+    	}}};
     quit_after_minutes.detach();
     // --------------- quit if 'q' is pressed  ------------------
     std::thread quit_on_q {[&]{ while (true) {
-	  if ( std::cin.get() == 'q' ) program_should_quit = true;
-	}}};
+    	  if ( std::cin.get() == 'q' ) program_should_quit = true;
+    	}}};
     quit_on_q.detach();
     // --------------------- Main loop -----------------------
     while (!program_should_quit) {
@@ -56,14 +55,13 @@ int main( int argc, char** argv) {
   }
   // ----------------------  exception handling -----------------
   catch (const helper::param_help_exception& e) { return 0; }
-  catch (const helper::quit_program_exception& e) {
-    // HELPER_LOG_OUT("creating daily average..");
+  catch (const helper::quit_program_exception& e) { // a normal session should end up here
+    // HELPER_LOG_OUT("creating session average..");
+    std::ostringstream filename;
+    filename << SESSION_AVERAGE_PATH << helper::bot::generate_unique_filename_for_average();
+    helper::bot::generate_average(Capture::get_photo_folder_path(),filename.str());
     // HELPER_LOG_OUT("tweeting daily average..");
     // HELPER_LOG_OUT("emailing daily average..");
-    // Bot bot {image_folder};
-    // bot.export_session_average();
-    // bot.tweet_session_average(); 
-    // bot.email_session_average();
     HELPER_LOG_OUT("cleaning up..."); 
     helper::gl::clean();
     HELPER_LOG_OUT("Goodbye!!");

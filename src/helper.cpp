@@ -146,20 +146,13 @@ std::vector<cv::Mat> helper::loadSampleImages() {
 
 // =============================== openCV ===============================
 
-float helper::opencv::rms_distance_between_eyes(const Face& face)  {
-  auto dx = face.right_eye.x - face.left_eye.x;
-  auto dy = face.right_eye.y - face.left_eye.y;
-  return std::sqrt(std::pow(dx,2) + std::pow(dy,2));
-}
-
-
-
 void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Face& face) {
 
-  // add a 30% white border so that rotation/scaling will not reveal any black background (also update the face's coordinates)
+  // add a 30% border so that rotation/scaling will not reveal any black background (also update the face's coordinates)
   const int border_size {photo.cols / 3};
   cv::copyMakeBorder(photo, photo, border_size, border_size, border_size, border_size,
   		     cv::BORDER_REPLICATE, cv::Scalar(255,255,255));
+		     // cv::BORDER_CONSTANT, cv::Scalar(200,200,200));
   const cv::Point offset {border_size, border_size};
   face.left_eye += offset;
   face.right_eye += offset;
@@ -195,13 +188,13 @@ void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Fac
   static const float third_point_dst_y {sin60 * (left_eye_dst.x - right_eye_dst.x) +
       cos60 * (left_eye_dst.y - right_eye_dst.y) + right_eye_dst.y};
   static const cv::Point2f third_point_dst {third_point_dst_x, third_point_dst_y};
-
+  
   // apply the transform and crop
   const cv::Point2f source_points[3] { left_eye_src, right_eye_src, third_point_src };
   static const cv::Point2f destination_points[3] = {left_eye_dst, right_eye_dst, third_point_dst};
   auto warp_mat = cv::getAffineTransform( source_points, destination_points );
   cv:: warpAffine(photo, photo, warp_mat,
-		   cv::Size(properties::captured_image_width,properties::captured_image_height));
+  		  cv::Size(properties::captured_image_width,properties::captured_image_height));
 }
 
 // ============================= opengl ============================== 
@@ -251,5 +244,99 @@ void helper::gl::display_cv_mat(const cv::Mat& mat) {
     glEnd();
     glDeleteTextures( 1, &texture ); // **** clean up
   } else throw helper::no_cv_data_exception();
+}
+
+// ============================= bot ==============================
+
+std::string helper::bot::generate_unique_filename_for_average() {
+  auto day = boost::gregorian::day_clock::universal_day();
+  std::ostringstream filename;
+  unsigned int i{1};
+  filename<< day.month() << " " << day.day() << " " << day.year() << " session average no " << i;
+  boost::filesystem::path path{filename.str()};
+  while (boost::filesystem::exists(path)) {
+    auto number_of_digits = static_cast<signed int>(std::log10(i)) + 1;
+    filename.seekp(-number_of_digits,filename.cur);
+    filename << i++;
+    path = boost::filesystem::path {filename.str()}; 
+  }
+  return filename.str();
+}
+
+void helper::bot::prepare_photo(const std::string& path) {
+  cv::Mat image {cv::imread(path)};
+  if (!image.data) throw std::runtime_error("helper::bot::prepare_photo: no image data");
+  cv::CascadeClassifier face_cascade;
+  if (!face_cascade.load(FACE_CASCADE))
+    throw std::runtime_error("Failed to load face cascade classfier");
+  cv::CascadeClassifier eyes_cascade;
+  if (!eyes_cascade.load(EYES_CASCADE))
+    throw std::runtime_error("Failed to load eyes cascade classfier");
+  // detect face
+  std::vector<cv::Rect> faces; // vector holding detected faces
+  cv::Mat frame_gray;
+  helper::opencv::Face faceObject;
+  cv::cvtColor(image, frame_gray, cv::COLOR_BGR2GRAY);
+  cv::equalizeHist(frame_gray, frame_gray); // **** maybe leave out for optimisatio
+  face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0, cv::Size(80, 80)); // detect faces
+  if (!(faces.size()==1)) 
+    throw std::runtime_error("helper::bot::prepare_photos: failed to detect a face (or too much detected)");
+  cv::Mat faceROI = frame_gray(faces[0]);
+  std::vector<cv::Rect> eyes;
+  eyes_cascade.detectMultiScale(faceROI, eyes, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE,cv::Size(30, 30));
+  if (eyes.size() == 2) {
+    for (auto& eye : eyes) eye = eye + cv::Point{faces[0].x,faces[0].y}; // make coordinates absolute
+    faceObject.left_eye = eyes[0];
+    faceObject.right_eye = eyes[1];
+    faceObject.face = faces[0];
+  } else throw std::runtime_error("helper::bot::prepare_photos: eyes not detected properly");
+  // allign face
+  helper::opencv::allign_and_isolate_face(image,faceObject);
+  // save image
+  cv::imwrite(path,image);
+}
+
+void helper::bot::generate_average(const std::string& path_to_folder, const std::string& output_file) {
+  boost::filesystem::path path_to_temporary_folder {path_to_folder};
+  path_to_temporary_folder /= "temp";
+  if (!boost::filesystem::create_directory(path_to_temporary_folder))
+    throw std::runtime_error("Failed to create temporary directory");
+
+  // allign images and put all valid paths in a vector
+  std::vector<boost::filesystem::path> image_file_paths;
+  std::for_each(boost::filesystem::directory_iterator{path_to_folder}, boost::filesystem::directory_iterator{},
+		[&image_file_paths](auto& file) {
+		  if (file.path().extension().string() == ".jpg" || file.path().extension().string() == ".tif" ||
+		      file.path().extension().string() == ".tiff" || file.path().extension().string() == ".png")
+		    try {
+		      helper::bot::prepare_photo(file.path().string());
+		      image_file_paths.emplace_back(file.path());
+		    }
+		    catch (const std::runtime_error& e) {
+		      HELPER_LOG_ERR(file.path().string() << " excluded from the session average because of: "
+				     << e.what());
+		    }});
+
+  // sum all images
+  unsigned int counter {0};
+  auto result = mar::binary_fold_rec(image_file_paths.cbegin(), image_file_paths.cend(),
+				     [&counter, &path_to_temporary_folder](auto file_a, auto file_b) {
+				       cv::Mat image_a{cv::imread(file_a.string())}; 
+				       cv::Mat image_b{cv::imread(file_b.string())};
+				       cv::Mat sum {};
+				       cv::addWeighted(image_a,0.5,image_b,0.5, 0, sum);
+				       std::ostringstream filename;
+				       filename << ++counter << ".tif";
+				       boost::filesystem::path path_to_result = path_to_temporary_folder;
+				       path_to_result /= filename.str();
+				       cv::imwrite(path_to_result.string(), sum);
+				       return path_to_result;
+				     });
+  // save and delete temporary
+  boost::filesystem::path path_to_output {output_file};
+  path_to_output.replace_extension(".tif"); // make sure it's a tif
+  HELPER_LOG_OUT("writing session average in file " << path_to_output.string());
+  boost::filesystem::rename(result, path_to_output);
+  boost::filesystem::remove_all(path_to_temporary_folder);
 }
 

@@ -10,7 +10,8 @@
 #include <exception>
 #include <vector>
 #include <cmath>
-// #include <array>
+#include <string>
+#include <sstream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <boost/log/core.hpp>
@@ -18,10 +19,12 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/program_options.hpp>
 #include <opencv2/opencv.hpp>
 #include "properties.h"
 
+#include "mar_algo.h"
 #include "mar_util.h"
 
 namespace helper {
@@ -64,6 +67,15 @@ namespace helper {
   void parametrise(int, char**); // parametrise from command line
   std::vector<cv::Mat> loadSampleImages();
 
+  // bot
+  namespace bot {
+    void prepare_photo(const std::string& path);
+    void generate_average(const std::string& path_to_folder, const std::string& output_file);
+    std::string generate_unique_filename_for_average();
+    // void tweet(std::string path);
+    // void send_email(std::string path);
+  }
+  
   // opencv
   namespace opencv {
     struct Face {
@@ -73,25 +85,23 @@ namespace helper {
       // cv::Rect mouth {};
     };
     void allign_and_isolate_face(cv::Mat&, helper::opencv::Face&);
-    void pad_and_resize_photo(cv::Mat&);
-    float rms_distance_between_eyes(const Face& face);  
   }
-  
+
   // opengl
   namespace gl {
     void setup();
     inline void error_callback(int error, const char* description) {
       HELPER_LOG_ERR(description << " Error code: " << error);
-      throw std::runtime_error(description); 
+      throw std::runtime_error(description);
     }
     inline void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods){
       if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 	glfwSetWindowShouldClose(window, GL_TRUE);
     }
     inline void clean() { // general cleanup
-      glfwTerminate(); 
+      glfwTerminate();
     }
-    void display_cv_mat(const cv::Mat&); 
+    void display_cv_mat(const cv::Mat&);
   }
 }
 
