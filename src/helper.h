@@ -65,6 +65,7 @@ namespace helper {
 
   // free functions
   void parametrise(int, char**); // parametrise from command line
+  void parametrise_average(int, char**, std::string& input_path); // for average command line tool
   std::vector<cv::Mat> loadSampleImages();
 
   // bot

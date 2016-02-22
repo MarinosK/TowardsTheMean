@@ -12,10 +12,11 @@ set (SOURCES       src/helper.cpp
 		   src/imageBuffer.cpp
 		   src/projection.cpp
 		   )
-set (APP_SOURCES   src/main.cpp	)	   
+set (APP_SOURCES   src/main.cpp	)
+set (AVERAGE_SOURCES   src/average.cpp	)
 set (TEST_SOURCES  src/tests.cpp
-                   lib/gmock-all.cc
-		   lib/gtest-all.cc)
+                   test_lib/gmock-all.cc
+		   test_lib/gtest-all.cc)
 include_directories(/opt/local/include
 		    /usr/local/include
 		    /usr/local/include/gmock
@@ -89,6 +90,26 @@ target_link_libraries(core ftgl)
 target_link_libraries(core freetype)
 #target_link_libraries(core GLEW_1130)
 
+# average command line tool
+add_executable(average ${AVERAGE_SOURCES})
+target_link_libraries(average core)
+
+# TowardsTheMean app
+add_executable(TowardsTheMean ${APP_SOURCES})
+target_link_libraries(TowardsTheMean core)
+#target_link_libraries(TowardsTheMean ${Boost_LIBRARIES})
+#target_link_libraries(oiko-threads ${OpenCV_LIBS})
+
+add_custom_command(TARGET TowardsTheMean PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:TowardsTheMean>/assets)
+add_custom_command(TARGET TowardsTheMean PRE_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+  $<TARGET_FILE_DIR:TowardsTheMean>/logs)
+add_custom_command(TARGET TowardsTheMean PRE_BUILD #this is a hack around a bug really, it shouldn't be needed
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_SOURCE_DIR}/lib $<TARGET_FILE_DIR:TowardsTheMean>/lib)
+
 # configure and run tests		 
 option(TEST_MODE "Compile and run tests" ON)
 if(TEST_MODE)
@@ -105,19 +126,6 @@ add_custom_target( RunTests ALL DEPENDS run_tests.lic)
 else()
     message("-- TEST_MODE OFF")
 endif()
-
-# TowardsTheMean app
-add_executable(TowardsTheMean ${APP_SOURCES})
-target_link_libraries(TowardsTheMean core)
-target_link_libraries(TowardsTheMean ${Boost_LIBRARIES})
-#target_link_libraries(oiko-threads ${OpenCV_LIBS})
-
-add_custom_command(TARGET TowardsTheMean PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-  ${CMAKE_SOURCE_DIR}/assets $<TARGET_FILE_DIR:TowardsTheMean>/assets)
-add_custom_command(TARGET TowardsTheMean PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E make_directory
-  $<TARGET_FILE_DIR:TowardsTheMean>/logs)
 
 
 

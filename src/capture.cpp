@@ -9,8 +9,8 @@
 static constexpr unsigned int photos_wait_time4 {WAIT_TIME_BETWEEN_PHOTOS + 3};
 static constexpr unsigned int photos_wait_time3 {WAIT_TIME_BETWEEN_PHOTOS + 2};
 static constexpr unsigned int photos_wait_time2 {WAIT_TIME_BETWEEN_PHOTOS + 1};
-static constexpr unsigned int photos_wait_time1 {WAIT_TIME_BETWEEN_PHOTOS};
-static constexpr double photos_wait_time_almost_done {WAIT_TIME_BETWEEN_PHOTOS - 0.5};
+static constexpr float photos_wait_time1 {WAIT_TIME_BETWEEN_PHOTOS + 0.5};
+static constexpr unsigned int photos_wait_time_still {WAIT_TIME_BETWEEN_PHOTOS};
 static constexpr unsigned int photos_wait_time_done {WAIT_TIME_BETWEEN_PHOTOS - 1};
 
 static std::string create_unique_folder(std::string root) {
@@ -118,8 +118,8 @@ void Capture::display_detect_capture_load_and_save_portrait(cv::Mat& video_frame
 	render_text("2",window_width_m/2,window_height_m/2,200);
       else if (glfwGetTime() <= (capture_counter_m - photos_wait_time1)) 
 	render_text("1",window_width_m/2,window_height_m/2,200);
-      else if (glfwGetTime() <= (capture_counter_m - photos_wait_time_almost_done)) {
-	render_text("done",window_width_m/2,window_height_m/2,200);
+      else if (glfwGetTime() <= (capture_counter_m - photos_wait_time_still)) {
+	render_text("1",window_width_m/2,window_height_m/2,200);
 	draw_frames_flag_m = false; // don't draw frames the next few times so that the photo can be taken
       } else if (glfwGetTime() <= (capture_counter_m - photos_wait_time_done)) {
 	render_text("done",window_width_m/2,window_height_m/2,200);

@@ -56,6 +56,20 @@ namespace {
 	 "set fade-in timw (seconds) for new images");
       return desc;
     }
+    boost::program_options::options_description init_descriptions_average(std::string& input) {
+      boost::program_options::options_description desc("Allowed options");
+      desc.add_options()
+	("help", "produce help message")
+	("captured_image_width", boost::program_options::value<unsigned int>
+	 (&helper_internal::captured_image_width)->default_value(CAPTURED_IMAGE_WIDTH),
+	 "the width the captured photo should be scaled to")
+	("captured_image_height", boost::program_options::value<unsigned int>
+	 (&helper_internal::captured_image_height)->default_value(CAPTURED_IMAGE_HEIGHT),
+	 "the height the captured photo should be scaled to")
+	("input", boost::program_options::value<std::string>(&input)->default_value("."),
+	 "the folder with the images to average");
+      return desc;
+    }
   }
 }
 
@@ -122,6 +136,19 @@ void helper::parametrise(int ac, char** argv) { // set runtime constants
 #ifdef UNSAFE_OPTIMISATIONS
   HELPER_LOG_OUT( "*** UNSAFE OPTIMISATIONS TURNED ON ***");
 #endif // UNSAFE_OPTIMISATIONS
+}
+
+void helper::parametrise_average(int ac, char** argv, std::string& input_path) { 
+  auto desc = helper_internal::init_descriptions_average(input_path); // get descriptions
+  // set variables nap
+  boost::program_options::variables_map vm;
+  boost::program_options::store(boost::program_options::parse_command_line(ac, argv, desc),vm);
+  boost::program_options::notify(vm);
+  // print descriptions on --help
+  if (vm.count("help")) std::cout << desc << std::endl;
+  // log otherwise
+  HELPER_LOG_OUT( "--the captured photos will be scaled to "
+		  << properties::captured_image_width << "x" << properties::captured_image_height);
 }
 
 // ============================= load sample images ============================== 
@@ -319,24 +346,29 @@ void helper::bot::generate_average(const std::string& path_to_folder, const std:
 
   // sum all images
   unsigned int counter {0};
-  auto result = mar::binary_fold_rec(image_file_paths.cbegin(), image_file_paths.cend(),
-				     [&counter, &path_to_temporary_folder](auto file_a, auto file_b) {
-				       cv::Mat image_a{cv::imread(file_a.string())}; 
-				       cv::Mat image_b{cv::imread(file_b.string())};
-				       cv::Mat sum {};
-				       cv::addWeighted(image_a,0.5,image_b,0.5, 0, sum);
-				       std::ostringstream filename;
-				       filename << ++counter << ".tif";
-				       boost::filesystem::path path_to_result = path_to_temporary_folder;
-				       path_to_result /= filename.str();
-				       cv::imwrite(path_to_result.string(), sum);
-				       return path_to_result;
-				     });
-  // save and delete temporary
-  boost::filesystem::path path_to_output {output_file};
-  path_to_output.replace_extension(".tif"); // make sure it's a tif
-  HELPER_LOG_OUT("writing session average in file " << path_to_output.string());
-  boost::filesystem::rename(result, path_to_output);
+  try {
+    auto result = mar::binary_fold_rec(image_file_paths.cbegin(), image_file_paths.cend(),
+				       [&counter, &path_to_temporary_folder](auto file_a, auto file_b) {
+					 cv::Mat image_a{cv::imread(file_a.string())}; 
+					 cv::Mat image_b{cv::imread(file_b.string())};
+					 cv::Mat sum {};
+					 cv::addWeighted(image_a,0.5,image_b,0.5, 0, sum);
+					 std::ostringstream filename;
+					 filename << ++counter << ".tif";
+					 boost::filesystem::path path_to_result = path_to_temporary_folder;
+					 path_to_result /= filename.str();
+					 cv::imwrite(path_to_result.string(), sum);
+					 return path_to_result;
+				       });
+    // save
+    boost::filesystem::path path_to_output {output_file};
+    path_to_output.replace_extension(".tif"); // make sure it's a tif
+    HELPER_LOG_OUT("writing session average in file " << path_to_output.string());
+    boost::filesystem::rename(result, path_to_output);
+  } catch (const std::out_of_range& e){
+    HELPER_LOG_ERR("No images left to operate upon");
+  }
+  // delete temporary
   boost::filesystem::remove_all(path_to_temporary_folder);
 }
 
