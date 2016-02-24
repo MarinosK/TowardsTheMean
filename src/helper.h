@@ -31,8 +31,6 @@
 #include <Poco/Net/NetException.h>
 #include "properties.h"
 
-#include <type_traits>
-
 // ---- MACROS ----
 #define HELPER_LOG_OUT(A) std::cout << A << std::endl; BOOST_LOG_TRIVIAL(info) << A;
 #define HELPER_LOG_ERR(A) std::cerr << "ERROR: " << A << std::endl; BOOST_LOG_TRIVIAL(error) << "ERROR: " << A;
