@@ -8,11 +8,12 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include "helper.h"
+#include "mar_util.h"
 
 int main( int argc, char** argv) {
   try {
     PROJECT_INFO_PRINT ("Photo Average command line tool");
-    std::string input_path;
+    std::string input_path{};
     helper::parametrise_average(argc, argv, input_path);
     boost::filesystem::path input_folder {input_path};
     std::cout << input_path << std::endl;

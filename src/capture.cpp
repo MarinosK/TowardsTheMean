@@ -57,10 +57,9 @@ Capture::Capture(Projection* proj) :
     if (!capture_window_m) throw std::runtime_error("Did not manage to create Capture Window");
     glfwSetKeyCallback(capture_window_m, helper::gl::key_callback);
     glfwMakeContextCurrent(capture_window_m);
+    // glewExperimental=true; 
     if (glewInit() != GLEW_OK) throw std::runtime_error("Failed to initialize GLEW");
     glEnable(GL_TEXTURE_2D);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSwapInterval(properties::vsync);
     glfwGetFramebufferSize(capture_window_m, &window_width_m, &window_height_m);
     if (font_m.Error()) throw std::runtime_error("Failed to load font");
@@ -76,18 +75,6 @@ Capture::Capture(Projection* proj) :
       throw std::runtime_error("Failed to load eyes cascade classfier");
   }
 
-void Capture::gl_preample() {
-  glfwMakeContextCurrent(capture_window_m);    
-  glViewport(0, 0, window_width_m, window_height_m);
-  glClearColor(BACKGROUND_COLOUR); 
-  glClear(GL_COLOR_BUFFER_BIT);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0.f, 1.f, 0.f, 1.f, 0.f, 1.f);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity(); 
-}
-
 void Capture::update_frame() {
   if (running_m) {
     if (glfwWindowShouldClose(capture_window_m)) // quit on escape
@@ -97,7 +84,6 @@ void Capture::update_frame() {
     get_video_frame(video_frame);
     display_detect_capture_load_and_save_portrait(video_frame);
     glfwSwapBuffers(capture_window_m);
-    // glfwPollEvents();
   }
 }
 
@@ -146,7 +132,6 @@ void Capture::load_and_save_portait(cv::Mat& video_frame, helper::opencv::Face& 
   if (!capture_done_flag_m) { // launch once only
     capture_done_flag_m = true; 
     draw_frames_flag_m = true;
-    // cv::Mat photo {video_frame.clone()}; // so that we don't have any clashes with the camera
     helper::opencv::allign_and_isolate_face(video_frame,face);
     cv::normalize(video_frame, video_frame, 0, 255, cv::NORM_MINMAX); // normalize
     std::ostringstream filename{};
@@ -156,24 +141,20 @@ void Capture::load_and_save_portait(cv::Mat& video_frame, helper::opencv::Face& 
       HELPER_LOG_OUT( filename.str() << " succesfully saved");	  
     }
     catch (std::runtime_error& e) {
-      HELPER_LOG_ERR( "failed to write " << filename.str()
-		      << " to disc with exception: " << e.what());	  
+      HELPER_LOG_ERR( "failed to write " << filename.str() << " to disc with exception: " << e.what());	  
     }
     projection_process_m->add_to_the_animation(video_frame);
   }
 }
 
-void Capture::render_text(const char* text, double x, double y, int fontSize) {
-  font_m.FaceSize(fontSize);
-  font_m.Render(text, -1, FTPoint(x,y));
-}
-
 boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool draw_frames){
   std::vector<cv::Rect> faces; // vector holding detected faces
   cv::Mat frame_gray;
-  helper::opencv::Face faceObject;
+  helper::opencv::Face face_object;
   cv::cvtColor(frame, frame_gray, cv::COLOR_BGR2GRAY);
-  cv::equalizeHist(frame_gray, frame_gray); // **** maybe leave out for optimisation
+#ifndef UNSAFE_OPTIMISATIONS
+  cv::equalizeHist(frame_gray, frame_gray); 
+#endif // UNSAFE_OPTIMISATIONS
   face_cascade_m.detectMultiScale(frame_gray, faces, 1.1, 2, 0, cv::Size(80, 80)); // detect faces
   if (faces.empty()) return boost::optional<helper::opencv::Face>{};
   for (auto& face : faces) { // else for each face detect eyes/mouth
@@ -186,13 +167,13 @@ boost::optional<helper::opencv::Face> Capture::detect_face(cv::Mat& frame, bool 
 	eye = eye + cv::Point{face.x,face.y}; // make coordinates absolute
 	if (draw_frames) cv::rectangle(frame, eye, EYES_FRAME_COLOUR);
       }
-      // * not optimal to move for each face just to keep the last, but there won't be many faces anyway
-      faceObject.left_eye = std::move(eyes[0]);
-      faceObject.right_eye = std::move(eyes[1]);
-      faceObject.face = std::move(face);
+      if (faces.size()==1) { // if only one face move the coordinates in the face_object
+	face_object.left_eye = std::move(eyes[0]);
+	face_object.right_eye = std::move(eyes[1]);
+	face_object.face = std::move(face);
+	return boost::optional<helper::opencv::Face>{face_object};
+      } else throw helper::too_many_faces_exception(); // many faces
     } else return boost::optional<helper::opencv::Face>{}; // not detected unless both eyes/mouth have been found!!
   }
-  if (faces.size()>1) throw helper::too_many_faces_exception(); // many faces
-  else return boost::optional<helper::opencv::Face>{faceObject};
+  return boost::optional<helper::opencv::Face>{}; // it should never reach here, this silences the compiler's warning
 }
-

@@ -9,7 +9,6 @@ set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -std=c++14 -stdlib=libc++ -DBOOST_LOG_USE_NATIVE_SYSLOG")
 set (SOURCES       src/helper.cpp
 		   src/capture.cpp
-		   src/imageBuffer.cpp
 		   src/projection.cpp
 		   )
 set (APP_SOURCES   src/main.cpp	)
@@ -50,8 +49,19 @@ if (OpenGL_FOUND)
   message( "-- OpenGL found")
 endif()
 
+find_library(POCO_FOUNDATION PocoFoundation)
+if (PocoFoundation_FOUND)
+  message( "-- POCO FOUNDATION found")
+endif()
+find_library(POCO_NET PocoNet)
+if (PocoNet_FOUND)
+  message( "-- POCO NET found")
+endif()
+
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${PocoFoundation_INCLUDE_DIRS})
+include_directories(${PocoNet_INCLUDE_DIRS})
 
 #user configuration
 if(${CMAKE_LINKAGE} MATCHES Static)
@@ -88,6 +98,7 @@ target_link_libraries(core GLEW)
 target_link_libraries(core glfw)
 target_link_libraries(core ftgl)
 target_link_libraries(core freetype)
+target_link_libraries(core ${POCO_FOUNDATION} ${POCO_NET})
 #target_link_libraries(core GLEW_1130)
 
 # average command line tool

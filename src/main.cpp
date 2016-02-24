@@ -17,7 +17,6 @@
 #include "mar_util.h"
 
 int main( int argc, char** argv) {
-  // aliases
   using clock = std::chrono::steady_clock;
   using minutes = std::chrono::minutes;
   using namespace std::literals;
@@ -49,8 +48,11 @@ int main( int argc, char** argv) {
     // --------------------- Main loop -----------------------
     while (!program_should_quit) {
       proj.update_frame();
-      cap.update_frame();
+#ifdef UNSAFE_OPTIMISATIONS // half frame rate - should not be needed
       glfwPollEvents();
+#endif
+      cap.update_frame();
+      glfwPollEvents(); 
     }
     throw helper::quit_program_exception();
     return 0; // it should never reach here normally
@@ -67,7 +69,9 @@ int main( int argc, char** argv) {
     filename << SESSION_AVERAGE_PATH << helper::bot::generate_unique_filename_for_average();
     helper::bot::generate_average(Capture::get_photo_folder_path(),filename.str());
     // HELPER_LOG_OUT("tweeting daily average..");
+    // to implement
     // HELPER_LOG_OUT("emailing daily average..");
+    // helper::bot::send_email(filename.str()); // to implement
     HELPER_LOG_OUT("cleaning up..."); 
     helper::gl::clean();
     HELPER_LOG_OUT("Goodbye!!");

@@ -22,43 +22,46 @@
 
 // ============================= mar_algo ==============================
 
-TEST(binary_fold_rec, operate_on_non_balanced_containers) {
+TEST(binary_fold, operate_on_non_balanced_containers) {
   std::vector<int> v = {10,10,10,10,10};
-  auto result = mar::binary_fold_rec(v.cbegin(), v.cend(), std::minus<int>());
+  auto result = helper::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
   ASSERT_EQ(result, 10);
 }
 
-TEST(binary_fold_rec, operate_on_non_balanced_containers2) {
+TEST(binary_fold, operate_on_non_balanced_containers2) {
   std::vector<int> v = {1,3,5,6,1};
-  auto result = mar::binary_fold_rec(v.cbegin(), v.cend(), std::minus<int>());
+  auto result = helper::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
   ASSERT_EQ(result, 0);
 }
 
-TEST(binary_fold_rec, operate_on_balanced_containers) {
+TEST(binary_fold, operate_on_balanced_containers) {
   std::vector<int> v = {5,4,3,2};
-  auto result = mar::binary_fold_rec(v.cbegin(), v.cend(), std::minus<int>());
+  auto result = helper::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
   ASSERT_EQ(result, 0);
 }
 
-TEST(binary_fold_rec, operate_on_balanced_containers2) {
+TEST(binary_fold, operate_on_balanced_containers2) {
   std::vector<int> v = {7,4,9,2,6,8};
-  auto result = mar::binary_fold_rec(v.cbegin(), v.cend(), std::minus<int>());
+  auto result = helper::binary_fold(v.cbegin(), v.cend(), std::minus<int>());
   ASSERT_EQ(result,-2);
 }
 
 
 // ============================= helper ============================== 
 TEST(helper_parametrise, correctly_parse_command_line_arguments) {
-  constexpr unsigned short argc {13};
-  const char* commands_to_parse[argc] {"command", "--animation_speed", "30",
-      "--camera", "2", "--max_images_in_loop", "50", "--new_image_fadein_time", "5.8",
-      "--quit_after_minutes", "23", "--anti_alliasing", "8"};
+  constexpr unsigned short argc {19};
+  const char* commands_to_parse[argc] {"command", "--animation_speed", "30", "--camera", "2", "--max_images_in_loop",
+      "50", "--new_image_fadein_time", "5.8", "--quit_after_minutes", "23", "--anti_alliasing", "8", "--smtp_host",
+      "test", "--smtp_user", "user", "--smtp_passwd", "pwd"};
   helper::parametrise(argc, const_cast<char**>(commands_to_parse));
   ASSERT_EQ(properties::animation_speed, 30);
   ASSERT_EQ(properties::camera, 2);
   ASSERT_EQ(properties::max_images_in_loop, 50);
   ASSERT_EQ(properties::quit_after_minutes, 23);
   ASSERT_EQ(properties::anti_alliasing, 8);
+  ASSERT_STREQ(properties::smtp_host.c_str(), "test");
+  ASSERT_STREQ(properties::smtp_user.c_str(), "user");
+  ASSERT_STREQ(properties::smtp_passwd.c_str(), "pwd");
   ASSERT_FLOAT_EQ(properties::new_image_fadein_time, 5.8);
 }
 

@@ -47,8 +47,21 @@ private:
   unsigned int photo_file_counter_m;
 
   void load_and_save_portait(cv::Mat&, helper::opencv::Face&); 
-  void render_text(const char*, double x, double y, int font_size = 56);
-  void gl_preample(); // standard gl preample setup
+  inline void render_text(const char* text, double x, double y, int font_size = 56) { 
+    font_m.FaceSize(font_size);
+    font_m.Render(text, -1, FTPoint(x,y));
+  }
+  inline void gl_preample() {
+    glfwMakeContextCurrent(capture_window_m);    
+    glViewport(0, 0, window_width_m, window_height_m);
+    glClearColor(BACKGROUND_COLOUR); 
+    glClear(GL_COLOR_BUFFER_BIT);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.f, 1.f, 0.f, 1.f, 0.f, 1.f);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity(); 
+  }
   boost::optional<helper::opencv::Face> detect_face(cv::Mat&,bool draw_frames = true);
   void display_detect_capture_load_and_save_portrait(cv::Mat&);
   inline void get_video_frame(cv::Mat& video_frame) {

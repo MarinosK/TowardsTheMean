@@ -17,9 +17,5 @@
 #define PRINT_TYPE_INFO(A) std::cout <<  #A << ": "<< boost::typeindex::type_id_with_cvr< decltype((A)) >().pretty_name() << std::endl;
 #define GET_VAR_NAME(a) #a
 
-// namespace mar {
-
-// }
-
 
 #endif

@@ -24,7 +24,7 @@ Projection::Projection() :
     if (!projection_window_m) throw std::runtime_error("Did not manages to create Capture Window");
     glfwSetKeyCallback(projection_window_m, helper::gl::key_callback);
     glfwMakeContextCurrent(projection_window_m);
-    // glewExperimental=true; /// ****** ???
+    // glewExperimental=true; 
     if (glewInit() != GLEW_OK) throw std::runtime_error("Failed to initialize GLEW"); // init GLEW
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
@@ -32,18 +32,6 @@ Projection::Projection() :
     glfwSwapInterval(properties::vsync);
     glfwGetFramebufferSize(projection_window_m, &window_width_m, &window_height_m);
   }
-
-void Projection::gl_preample() {
-  glfwMakeContextCurrent(projection_window_m);    
-  glViewport(0, 0, window_width_m, window_height_m);
-  glClearColor(BACKGROUND_COLOUR); 
-  glClear(GL_COLOR_BUFFER_BIT);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0.f, 1.f, 0.f, 1.f, 0.f, 1.f);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity(); 
-}
 
 void Projection::fade_in_new_images(cv::Mat& mat) {
   if (!images_to_fade_in_m.empty()) { // if not empty
@@ -58,7 +46,7 @@ void Projection::fade_in_new_images(cv::Mat& mat) {
       if (fade_counter_m <= glfwGetTime()) { // when done start a new fade_out
 	fade_in_done_m = true;
 	fade_out_done_m = false;
-	image_buffer_m.add_image(images_to_fade_in_m.front()); // add to the image_buffer (so that shifts in the order are not noticed)
+	image_buffer_m.add_image(images_to_fade_in_m.front()); // add to the image_buffer here (so that shifts in the order are not noticed)
 	fade_counter_m = glfwGetTime() + properties::new_image_fadein_time; // reset counter
       }
     }
@@ -92,6 +80,5 @@ void Projection::update_frame() {
     // cv::normalize(average, average, 0, 255, cv::NORM_MINMAX);
     helper::gl::display_cv_mat(average);
     glfwSwapBuffers(projection_window_m);
-    // glfwPollEvents();
   }
 }

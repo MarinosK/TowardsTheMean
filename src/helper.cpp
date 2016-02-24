@@ -20,6 +20,9 @@ namespace {
     unsigned int captured_image_height;
     unsigned long quit_after_minutes;
     unsigned short anti_alliasing;
+    std::string smtp_host;
+    std::string smtp_user; 
+    std::string smtp_passwd;
     int vsync;
     GLFWmonitor* primary_monitor;
     GLFWmonitor* projection_monitor;
@@ -51,6 +54,12 @@ namespace {
 	("captured_image_height", boost::program_options::value<unsigned int>
 	 (&helper_internal::captured_image_height)->default_value(CAPTURED_IMAGE_HEIGHT),
 	 "the height the captured photo should be scaled to")
+	("smtp_host", boost::program_options::value<std::string>
+	 (&helper_internal::smtp_host)->default_value(""), "the smptp mail client host")
+	("smtp_user", boost::program_options::value<std::string>
+	 (&helper_internal::smtp_user)->default_value(""), "the smtp mail client username")
+	("smtp_passwd", boost::program_options::value<std::string>
+	 (&helper_internal::smtp_passwd)->default_value(""), "the smptp mail client password")
 	("new_image_fadein_time", boost::program_options::value<float>
 	 (&helper_internal::new_image_fadein_time)->default_value(NEW_IMAGE_FADEIN_TIME),
 	 "set fade-in timw (seconds) for new images");
@@ -85,11 +94,12 @@ const unsigned int& properties::captured_image_width {helper_internal::captured_
 const unsigned int& properties::captured_image_height {helper_internal::captured_image_height};
 const int& properties::vsync {helper_internal::vsync};
 const unsigned short& properties::anti_alliasing {helper_internal::anti_alliasing};
-const unsigned int& properties::projection_monitor_width {
-  helper_internal::projection_monitor_width};
-const unsigned int& properties::projection_monitor_height {
-  helper_internal::projection_monitor_height};
+const unsigned int& properties::projection_monitor_width { helper_internal::projection_monitor_width};
+const unsigned int& properties::projection_monitor_height { helper_internal::projection_monitor_height};
 const unsigned long& properties::quit_after_minutes {helper_internal::quit_after_minutes};
+const std::string& properties::smtp_host {helper_internal::smtp_host};
+const std::string& properties::smtp_user {helper_internal::smtp_user};
+const std::string& properties::smtp_passwd {helper_internal::smtp_passwd};
 GLFWmonitor*& properties::primary_monitor {helper_internal::primary_monitor};
 GLFWmonitor*& properties::projection_monitor {helper_internal::projection_monitor};
 
@@ -100,13 +110,8 @@ void helper::logging::setup() {
   boost::log::add_file_log
     (boost::log::keywords::file_name = LOGGING_FILE_PATH,
      boost::log::keywords::rotation_size = r_size,
-     boost::log::keywords::format = "[%TimeStamp%]: %Message%"
-      );
+     boost::log::keywords::format = "[%TimeStamp%]: %Message%");
   boost::log::add_common_attributes();
-}
-void helper::logging::supress() {
-  boost::log::core::get()->set_filter
-    (boost::log::trivial::severity > boost::log::trivial::fatal);
 }
 
 // ============================= parametrise ============================== 
@@ -116,23 +121,20 @@ void helper::parametrise(int ac, char** argv) { // set runtime constants
   boost::program_options::variables_map vm;
   boost::program_options::store(boost::program_options::parse_command_line(ac, argv, desc),vm);
   boost::program_options::notify(vm);
-  // print descriptions on --help
-  if (vm.count("help")) {
+  if (vm.count("help")) {   // print descriptions on --help
     std::cout << desc << std::endl;
     throw helper::param_help_exception(); // to quit from main
   }
   // log otherwise
   HELPER_LOG_OUT( "--animation_speed set to " << properties::animation_speed );
   HELPER_LOG_OUT( "--using camera " << properties::camera );
-  HELPER_LOG_OUT( "--maximum number of images in animation loop set to "
-		  << properties::max_images_in_loop );
+  HELPER_LOG_OUT( "--maximum number of images in animation loop set to " << properties::max_images_in_loop );
   HELPER_LOG_OUT( "--fade-in time for new images set to " << properties::new_image_fadein_time );
   HELPER_LOG_OUT( "--vsync set to " << properties::vsync);
   HELPER_LOG_OUT( "--anti-alliasing set to " << properties::anti_alliasing);
   HELPER_LOG_OUT( "--the captured photos will be scaled to "
 		  << properties::captured_image_width << "x" << properties::captured_image_height);
-  HELPER_LOG_OUT( "--the application will quit after " << properties::quit_after_minutes
-		  << " minutes");
+  HELPER_LOG_OUT( "--the application will quit after " << properties::quit_after_minutes << " minutes");
 #ifdef UNSAFE_OPTIMISATIONS
   HELPER_LOG_OUT( "*** UNSAFE OPTIMISATIONS TURNED ON ***");
 #endif // UNSAFE_OPTIMISATIONS
@@ -144,8 +146,7 @@ void helper::parametrise_average(int ac, char** argv, std::string& input_path) {
   boost::program_options::variables_map vm;
   boost::program_options::store(boost::program_options::parse_command_line(ac, argv, desc),vm);
   boost::program_options::notify(vm);
-  // print descriptions on --help
-  if (vm.count("help")) {
+  if (vm.count("help")) {   // print descriptions on --help
     std::cout << desc << std::endl;
     throw helper::param_help_exception(); // to quit from main
   }
@@ -181,8 +182,7 @@ void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Fac
   // add a 30% border so that rotation/scaling will not reveal any black background (also update the face's coordinates)
   const int border_size {photo.cols / 3};
   cv::copyMakeBorder(photo, photo, border_size, border_size, border_size, border_size,
-  		     cv::BORDER_REPLICATE, cv::Scalar(255,255,255));
-  // cv::BORDER_CONSTANT, cv::Scalar(200,200,200));
+  		     cv::BORDER_REPLICATE, cv::Scalar(255,255,255));   // cv::BORDER_CONSTANT, cv::Scalar(200,200,200)); 
   const cv::Point offset {border_size, border_size};
   face.left_eye += offset;
   face.right_eye += offset;
@@ -234,10 +234,8 @@ void helper::gl::setup() {
   glfwSetErrorCallback(helper::gl::error_callback); // register error_callback
   glfwWindowHint(GLFW_SAMPLES, properties::anti_alliasing); // anti-alliasing
   // retrieve monitors and update properties
-  int count;
-  GLFWmonitor** monitors = glfwGetMonitors(&count);
-  if (count != 2)
-    throw std::runtime_error("Two monitors are necessary to run this software!");
+  int count; GLFWmonitor** monitors = glfwGetMonitors(&count);
+  if (count != 2) throw std::runtime_error("Two monitors are necessary to run this software!");
   helper_internal::primary_monitor = monitors[0];
   helper_internal::projection_monitor = monitors[1];
   const GLFWvidmode* primary_mode {glfwGetVideoMode(properties::primary_monitor)};
@@ -251,6 +249,7 @@ void helper::gl::setup() {
   HELPER_LOG_OUT( "--projection screen resolution detected: " << properties::projection_monitor_width
   		  << "x" << properties::projection_monitor_height);
 }
+
 void helper::gl::display_cv_mat(const cv::Mat& mat) {
   if (mat.data) {
     GLuint texture;
@@ -263,20 +262,49 @@ void helper::gl::display_cv_mat(const cv::Mat& mat) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mat.cols, mat.rows, 0, GL_BGR, GL_UNSIGNED_BYTE, mat.ptr());
     glColor4f(1.f,1.f,1.f,1.f);
     glBegin (GL_QUADS);
-    glTexCoord2d(0.f,0.f);
-    glVertex2d(0.f,1.f);
-    glTexCoord2d(1.f,0.f); 
-    glVertex2d(1.f,1.f);
-    glTexCoord2d(1.f,1.f); 
-    glVertex2d(1.f,0.f);
-    glTexCoord2d(0.f,1.f); 
-    glVertex2d(0.f,0.f);
+    glTexCoord2d(0.f,0.f);    glVertex2d(0.f,1.f);
+    glTexCoord2d(1.f,0.f);    glVertex2d(1.f,1.f);
+    glTexCoord2d(1.f,1.f);    glVertex2d(1.f,0.f);
+    glTexCoord2d(0.f,1.f);    glVertex2d(0.f,0.f);
     glEnd();
     glDeleteTextures( 1, &texture ); // **** clean up
   } else throw helper::no_cv_data_exception();
 }
 
 // ============================= bot ==============================
+void helper::bot::send_email(const std::string& path) {
+  // if there are credentials: 
+  std::string to = "marinos@marinoskoutsomichalis.com";
+  std::string from = "marinos@agxivatein.com";
+  std::ostringstream subject_stream;
+  subject_stream << "Towards The Mean correspondance: " << path;
+  std::string subject = subject_stream.str();
+  subject = Poco::Net::MailMessage::encodeWord(subject, "UTF-8");
+  std::string content = "This is the Towards The Mean Auto-Bot: Please find attached this session's average.";
+  Poco::Net::MailMessage message;
+  message.setSender(from);
+  message.addRecipient(Poco::Net::MailRecipient{Poco::Net::MailRecipient::PRIMARY_RECIPIENT, to});
+  message.setSubject(subject);
+  message.setContentType("text/plain; charset=UTF-8");
+  message.setContent(content, Poco::Net::MailMessage::ENCODING_8BIT);
+  // file name only
+  // message.addAttachment("session_average", new FilePartSource(path));
+  // try {
+  //   Poco::Net::SMTPClientSession session(smtp_host, 465);
+  //   session.open();
+  //   try {
+  //     session.login(Poco::Net::SMTPClientSession::AUTH_LOGIN, smtp_user, smtp_passwd);
+  //     session.sendMessage(message);
+  //     HELPER_LOG_OUT("message successfully sent");
+  //     session.close();
+  //   } catch (Poco::Net::SMTPException& e) {
+  //     HELPER_LOG_ERR("failure to send message with exception: " << e.displayText());
+  //     session.close();
+  //   }
+  // } catch (Poco::Net::NetException& e) {
+  //   HELPER_LOG_ERR("failure to connect to SMTP host with exception: " << e.displayText());	  
+  // }
+}
 
 std::string helper::bot::generate_unique_filename_for_average() {
   auto day = boost::gregorian::day_clock::universal_day();
@@ -325,18 +353,19 @@ void helper::bot::prepare_photo(const std::string& path) {
     faceObject.right_eye = eyes[1];
     faceObject.face = faces[0];
   } else throw std::runtime_error("helper::bot::prepare_photos: eyes not detected properly");
-  // allign face
-  helper::opencv::allign_and_isolate_face(image,faceObject);
-  // save image
-  cv::imwrite(path,image);
+  helper::opencv::allign_and_isolate_face(image,faceObject);   // allign face
+  cv::imwrite(path,image);   // save image
 }
 
 void helper::bot::generate_average(const std::string& path_to_folder, const std::string& output_file) {
+  boost::filesystem::path session_average_folder {SESSION_AVERAGE_PATH};
+  if (!boost::filesystem::is_directory(session_average_folder))
+    if (!boost::filesystem::create_directory(session_average_folder))
+      throw std::runtime_error("Failed to create session_average folder");
   boost::filesystem::path path_to_temporary_folder {path_to_folder};
   path_to_temporary_folder /= "temp";
   if (!boost::filesystem::create_directory(path_to_temporary_folder))
     throw std::runtime_error("Failed to create temporary directory");
-
   // allign images and put all valid paths in a vector
   std::vector<boost::filesystem::path> image_file_paths;
   std::for_each(boost::filesystem::directory_iterator{path_to_folder}, boost::filesystem::directory_iterator{},
@@ -350,16 +379,15 @@ void helper::bot::generate_average(const std::string& path_to_folder, const std:
 		      HELPER_LOG_ERR(file.path().string() << " excluded from the session average because of: "
 				     << e.what());
 		    }});
-
   // sum all images
   unsigned int counter {0};
   try {
-    auto result = mar::binary_fold_rec(image_file_paths.cbegin(), image_file_paths.cend(),
+    auto result = helper::binary_fold(image_file_paths.cbegin(), image_file_paths.cend(),
 				       [&counter, &path_to_temporary_folder](auto file_a, auto file_b) {
 					 cv::Mat image_a{cv::imread(file_a.string())}; 
 					 cv::Mat image_b{cv::imread(file_b.string())};
 					 cv::Mat sum {};
-					 cv::addWeighted(image_a,0.5,image_b,0.5, 0, sum);
+					 cv::addWeighted(image_a,0.5, image_b,0.5, 0, sum);
 					 std::ostringstream filename;
 					 filename << ++counter << ".tif";
 					 boost::filesystem::path path_to_result = path_to_temporary_folder;
@@ -372,10 +400,7 @@ void helper::bot::generate_average(const std::string& path_to_folder, const std:
     path_to_output.replace_extension(".tif"); // make sure it's a tif
     HELPER_LOG_OUT("writing session average in file " << path_to_output.string());
     boost::filesystem::rename(result, path_to_output);
-  } catch (const std::out_of_range& e){
-    HELPER_LOG_ERR("No images left to operate upon");
-  }
-  // delete temporary
-  boost::filesystem::remove_all(path_to_temporary_folder);
+  } catch (const std::out_of_range& e){ HELPER_LOG_ERR("No images left to operate upon"); }
+  boost::filesystem::remove_all(path_to_temporary_folder);   // delete temporary folder
 }
 

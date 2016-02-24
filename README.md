@@ -21,6 +21,7 @@ You need the following dependencies:
     * glew
 	* freetype
 	* ftgl
+	* POCO
 	
 (you might have to edit CMakeLists.txt to update certain paths, etc)
 
