@@ -68,9 +68,9 @@ int main( int argc, char** argv) {
     std::ostringstream filename;
     filename << SESSION_AVERAGE_PATH << helper::bot::generate_unique_filename_for_average();
     helper::bot::generate_average(Capture::get_photo_folder_path(),filename.str());
-    // HELPER_LOG_OUT("tweeting daily average..");
+    // HELPER_LOG_OUT("tweeting session average..");
     // to implement
-    // HELPER_LOG_OUT("emailing daily average..");
+    // HELPER_LOG_OUT("emailing session average..");
     // helper::bot::send_email(filename.str()); // to implement
     HELPER_LOG_OUT("cleaning up..."); 
     helper::gl::clean();

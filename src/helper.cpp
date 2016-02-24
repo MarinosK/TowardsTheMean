@@ -273,24 +273,23 @@ void helper::gl::display_cv_mat(const cv::Mat& mat) {
 
 // ============================= bot ==============================
 void helper::bot::send_email(const std::string& path) {
-  // if there are credentials: 
-  std::string to = "marinos@marinoskoutsomichalis.com";
-  std::string from = "marinos@agxivatein.com";
-  std::ostringstream subject_stream;
-  subject_stream << "Towards The Mean correspondance: " << path;
-  std::string subject = subject_stream.str();
-  subject = Poco::Net::MailMessage::encodeWord(subject, "UTF-8");
-  std::string content = "This is the Towards The Mean Auto-Bot: Please find attached this session's average.";
-  Poco::Net::MailMessage message;
-  message.setSender(from);
-  message.addRecipient(Poco::Net::MailRecipient{Poco::Net::MailRecipient::PRIMARY_RECIPIENT, to});
-  message.setSubject(subject);
-  message.setContentType("text/plain; charset=UTF-8");
-  message.setContent(content, Poco::Net::MailMessage::ENCODING_8BIT);
-  // file name only
-  // message.addAttachment("session_average", new FilePartSource(path));
+  // if there are credentials:
+  // std::string to = "marinos@marinoskoutsomichalis.com";
+  // std::string from = "marinos@agxivatein.com";
+  // std::ostringstream subject_stream;
+  // subject_stream << "Towards The Mean correspondance: " << path;
+  // std::string subject = subject_stream.str();
+  // subject = Poco::Net::MailMessage::encodeWord(subject, "UTF-8");
+  // std::string content = "This is the Towards The Mean auto-bot: Please find attached this session's average.";
+  // Poco::Net::MailMessage message;
+  // message.setSender(from);
+  // message.addRecipient(Poco::Net::MailRecipient{Poco::Net::MailRecipient::PRIMARY_RECIPIENT, to});
+  // message.setSubject(subject);
+  // message.setContentType("text/plain; charset=UTF-8");
+  // message.setContent(content, Poco::Net::MailMessage::ENCODING_8BIT);
+  // // message.addAttachment("session_average", new FilePartSource(path));
   // try {
-  //   Poco::Net::SMTPClientSession session(smtp_host, 465);
+  //   Poco::Net::SMTPClientSession session(smtp_host, 25);
   //   session.open();
   //   try {
   //     session.login(Poco::Net::SMTPClientSession::AUTH_LOGIN, smtp_user, smtp_passwd);
