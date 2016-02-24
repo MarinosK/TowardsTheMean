@@ -21,8 +21,8 @@
 #define LOGGING_FILE_PATH "./logs/%Y-%m-%d_%H-%M-%S.%N.log"
 #define ANIMATION_SPEED 10 // large values => slower speed
 #define CAMERA_INDEX 0 
-#define MAX_IMAGES_IN_LOOP 10
-#define NEW_IMAGE_FADEIN_TIME 30 // seconds
+#define MAX_IMAGES_IN_LOOP 30
+#define NEW_IMAGE_FADEIN_TIME 15 // seconds
 #define VSYNC 1 // the swapping buffer interval
 #define ANTI_ALLIASING 4
 #define BACKGROUND_COLOUR 0.f, 0.f, 0.f, 1.f

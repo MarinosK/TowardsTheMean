@@ -282,7 +282,7 @@ std::string helper::bot::generate_unique_filename_for_average() {
   auto day = boost::gregorian::day_clock::universal_day();
   unsigned int i{1};
   std::ostringstream filename;
-  filename << "./" << day.month() << " " << day.day() << " " << day.year() << " session average no " << i;
+  filename << day.month() << " " << day.day() << " " << day.year() << " session average no " << i;
   std::ostringstream test_path_filename;
   test_path_filename << filename.str() << ".tif";
   boost::filesystem::path test_path{test_path_filename.str()};
@@ -290,7 +290,8 @@ std::string helper::bot::generate_unique_filename_for_average() {
     auto number_of_digits = static_cast<signed int>(std::log10(i)) + 1;
     filename.seekp(-number_of_digits,filename.cur);
     filename << i++;
-    test_path_filename.str("").clear();
+    test_path_filename.str("");
+    test_path_filename.clear();
     test_path_filename << filename.str() << ".tif";
     test_path = boost::filesystem::path{test_path_filename.str()};
   }
