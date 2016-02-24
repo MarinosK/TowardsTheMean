@@ -145,7 +145,10 @@ void helper::parametrise_average(int ac, char** argv, std::string& input_path) {
   boost::program_options::store(boost::program_options::parse_command_line(ac, argv, desc),vm);
   boost::program_options::notify(vm);
   // print descriptions on --help
-  if (vm.count("help")) std::cout << desc << std::endl;
+  if (vm.count("help")) {
+    std::cout << desc << std::endl;
+    throw helper::param_help_exception(); // to quit from main
+  }
   // log otherwise
   HELPER_LOG_OUT( "--the captured photos will be scaled to "
 		  << properties::captured_image_width << "x" << properties::captured_image_height);
@@ -166,7 +169,7 @@ std::vector<cv::Mat> helper::loadSampleImages() {
 			static_cast<int>(properties::captured_image_width),
 			  static_cast<int>(properties::captured_image_height)});
 		    images.emplace_back(image);
-		  }
+		  } else HELPER_LOG_OUT(file.path().string() << " could not be read: only images with .jpg, .tif, .tiff and .png extensions are supported.");
 		});
   return images;    
 }
@@ -179,7 +182,7 @@ void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Fac
   const int border_size {photo.cols / 3};
   cv::copyMakeBorder(photo, photo, border_size, border_size, border_size, border_size,
   		     cv::BORDER_REPLICATE, cv::Scalar(255,255,255));
-		     // cv::BORDER_CONSTANT, cv::Scalar(200,200,200));
+  // cv::BORDER_CONSTANT, cv::Scalar(200,200,200));
   const cv::Point offset {border_size, border_size};
   face.left_eye += offset;
   face.right_eye += offset;
@@ -277,15 +280,19 @@ void helper::gl::display_cv_mat(const cv::Mat& mat) {
 
 std::string helper::bot::generate_unique_filename_for_average() {
   auto day = boost::gregorian::day_clock::universal_day();
-  std::ostringstream filename;
   unsigned int i{1};
-  filename<< day.month() << " " << day.day() << " " << day.year() << " session average no " << i;
-  boost::filesystem::path path{filename.str()};
-  while (boost::filesystem::exists(path)) {
+  std::ostringstream filename;
+  filename << "./" << day.month() << " " << day.day() << " " << day.year() << " session average no " << i;
+  std::ostringstream test_path_filename;
+  test_path_filename << filename.str() << ".tif";
+  boost::filesystem::path test_path{test_path_filename.str()};
+  while (boost::filesystem::exists(test_path)) {
     auto number_of_digits = static_cast<signed int>(std::log10(i)) + 1;
     filename.seekp(-number_of_digits,filename.cur);
     filename << i++;
-    path = boost::filesystem::path {filename.str()}; 
+    test_path_filename.str("").clear();
+    test_path_filename << filename.str() << ".tif";
+    test_path = boost::filesystem::path{test_path_filename.str()};
   }
   return filename.str();
 }
@@ -304,7 +311,7 @@ void helper::bot::prepare_photo(const std::string& path) {
   cv::Mat frame_gray;
   helper::opencv::Face faceObject;
   cv::cvtColor(image, frame_gray, cv::COLOR_BGR2GRAY);
-  cv::equalizeHist(frame_gray, frame_gray); // **** maybe leave out for optimisatio
+  cv::equalizeHist(frame_gray, frame_gray); // **** maybe leave out for optimisation
   face_cascade.detectMultiScale(frame_gray, faces, 1.1, 2, 0, cv::Size(80, 80)); // detect faces
   if (!(faces.size()==1)) 
     throw std::runtime_error("helper::bot::prepare_photos: failed to detect a face (or too much detected)");
@@ -338,8 +345,7 @@ void helper::bot::generate_average(const std::string& path_to_folder, const std:
 		    try {
 		      helper::bot::prepare_photo(file.path().string());
 		      image_file_paths.emplace_back(file.path());
-		    }
-		    catch (const std::runtime_error& e) {
+		    }  catch (const std::runtime_error& e) {
 		      HELPER_LOG_ERR(file.path().string() << " excluded from the session average because of: "
 				     << e.what());
 		    }});

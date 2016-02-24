@@ -51,6 +51,12 @@ more, there are a number of properties that can be defined in compile time (chec
 
 > It is very important that the CAPTURED_IMAGE_WIDTH/HEIGHT properties are set correctly and with respect to the camera's resolution---they don't necessarily have to equal the latter, bare in mind however that the scaling carried out internally is not proportional and may distort images if these values are not correctly set. Bare in mind that large values require greater memory overhead. 
 
-# To Use #
+To Use
 
 run ./TowardsTheMean --help to see a list of all available configurations and then call again the appropriate flags. You may consider creating some script and an application wrapper. Note that this software is meant for the purposes of Marianne Holm Hansen artistic installation only and should not be used as is in any other occasion. 
+
+The 'average' utility can be used to create session averages out of folders with images (note that this will destructively allign all images within these folders - this cannot be undone!! - so make a copy if you wish to keep the originals intact). Use like this:
+
+average --input PATH_TO_FOLDER_WITH_THE_IMAGES --captured_image_width XX --captured_image_height YY
+
+(the arguments are all optional)
