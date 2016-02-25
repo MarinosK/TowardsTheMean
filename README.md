@@ -52,12 +52,31 @@ more, there are a number of properties that can be defined in compile time (chec
 
 > It is very important that the CAPTURED_IMAGE_WIDTH/HEIGHT properties are set correctly and with respect to the camera's resolution---they don't necessarily have to equal the latter, bare in mind however that the scaling carried out internally is not proportional and may distort images if these values are not correctly set. Bare in mind that large values require greater memory overhead. 
 
-To Use
+## To Use ##
 
-run ./TowardsTheMean --help to see a list of all available configurations and then call again the appropriate flags. You may consider creating some script and an application wrapper. Note that this software is meant for the purposes of Marianne Holm Hansen artistic installation only and should not be used as is in any other occasion. 
+Once you’ve have installed everything you will end up in the build directory which will incude a `Install` folder, this is where you will find three executables: TowardsTheMean, ttm_tests, average. (The first is the actual application, the second is just some unit-tests you can ignore this and the last is the command-line I promised to automatically create session averages on your own). You will also find a number of folders with auxilary files. Note that once you run the program additional folders will be created to hold the session photos (photos) and averages (session_averages) and some log files (logs).
+To use enter the Install directory: 
 
-The 'average' utility can be used to create session averages out of folders with images (note that this will destructively allign all images within these folders - this cannot be undone!! - so make a copy if you wish to keep the originals intact). Use like this:
+	*cd Install
+	
+Now you can simply invoke the application like this (you need two screens and at least a camera else you will get an error):
 
-average --input PATH_TO_FOLDER_WITH_THE_IMAGES --captured_image_width XX --captured_image_height YY
+	*./TowardsTheMean
+	
+It might be necessary to properly calibrate the software, in particular the captured_image_width, captured_image_height, and camera properties. To do this when running the software pass values as arguments, e.g.:
 
-(the arguments are all optional)
+	*./TowardsTheMean --camera 1 --captured_image_width 640 --captured_image_width 480 
+
+(this will change the size of the captured images and select camera number 1, rather than the default number 0)
+
+There more properties to play with such as desired anti-alliasing, the maximum number of photos in memory, the minutes after which to quit, the fade_in/out loops, etc. All these are documented in the README.rd file but you can also run this command for an overview: 
+
+	*./TowardsTheMean --help
+	
+To quit either hit escape, or cmd-Q or go back to the terminal and type ‘q’ and press enter.  
+Once you quit you will find a folder with the session photos inside ‘photos’ and a session average inside ’session_average'
+You can use the average command like this:
+
+	*./average --input XXXX
+	
+(XXXX should be the name of the folder with the photos to average, not that it will destructively CHANGE the original photos = to allign them - so do make a copy before you proceed)
