@@ -37,7 +37,7 @@ this will create an Install folder with the executable, the data assets, and the
 
     * -DCMAKE_BUILD_MODE=Debug or =Release -> to switch between debug/release builds, default is Debug
     * -DTEST_MODE=OFF -> do not compile/run the tests
-	* -DCMAKE_LINKAGE=Static or =Dynamic -> link against dynamic/static libraries (currently only dynamic linking supported)
+	* -DCMAKE_LINKAGE=Dynamic or =Static -> switch between dynamic/static linkage. Note that static mode will still link dynamically against libc++ and a number of other system-specific libraries
 
 more, there are a number of properties that can be defined in compile time (check properties.h)
 

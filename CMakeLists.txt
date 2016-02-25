@@ -25,7 +25,7 @@ include_directories(/opt/local/include
 		    )
 set (DYN_LINK       /opt/local/lib
                     /usr/local/lib)
-set (STATIC_LINK    static)
+set (STATIC_LINK    lib)
 		  
 set(CMAKE_INSTALL_PREFIX  "${CMAKE_BINARY_DIR}/Install")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Install")
@@ -64,13 +64,17 @@ include_directories(${PocoFoundation_INCLUDE_DIRS})
 include_directories(${PocoNet_INCLUDE_DIRS})
 
 #user configuration
-if(${CMAKE_LINKAGE} MATCHES Static)
+if(${CMAKE_LINKAGE} MATCHES Static) 
   message("-- STATIC LINKAGE SELECTED")
   link_directories(${STATIC_LINK})
+  # link_directories(${DYN_LINK})
+  # link_directories(${Boost_LIBRARY_DIR})
+  # link_directories(${Boost_LIBRARY_DIR})
   set(Boost_USE_STATIC_LIBS ON)
   set(Boost_USE_STATIC_RUNTIME OFF)
   set(CMAKE_FIND_LIBRARY_SUFFIXES	".a")
   set(BUILD_SHARED_LIBRARIES OFF)
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3")
 else()
   message("-- DYNAMIC LINKAGE SELECTED")
   #find libraries
@@ -81,12 +85,12 @@ else()
   set(Boost_USE_STATIC_LIBS OFF)
 endif()
 
-if(${CMAKE_BUILD_MODE} MATCHES Release)
-  message("-- RELEASE MODE ON")
-  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3")
-else()
+if(${CMAKE_BUILD_MODE} MATCHES Debug)
   message("-- DEBUG MODE ON")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DDEBUG")
+else()
+  message("-- RELEASE MODE ON")
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -O3")
 endif()
 
 # core
