@@ -16,20 +16,20 @@ int main( int argc, char** argv) {
     std::string input_path{};
     helper::parametrise_average(argc, argv, input_path);
     boost::filesystem::path input_folder {input_path};
-    std::cout << input_path << std::endl;
+    std::cout << input_path << "\n";
     if (!boost::filesystem::is_directory(input_folder))
-      std::cerr << input_path << " folder does not exist" << std::endl;  
+      std::cerr << input_path << " folder does not exist\n";  
     helper::bot::generate_average(input_path,helper::bot::generate_unique_filename_for_average());
-    std::cout << "Goodbye!" << std::endl;
+    std::cout << "Goodbye!\n";
     return 0;
   }
   catch (const helper::param_help_exception& e) {
     return 0;
   }  catch (const cv::Exception& e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << e.what() << "\n";
     return 1; 
   } catch (...) {
-    std::cerr << "uknown exception" << std::endl;
+    std::cerr << "uknown exception\n";
     return 2; 
   }
 }

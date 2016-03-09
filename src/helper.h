@@ -32,8 +32,8 @@
 #include "properties.h"
 
 // ---- MACROS ----
-#define HELPER_LOG_OUT(A) std::cout << A << std::endl; BOOST_LOG_TRIVIAL(info) << A;
-#define HELPER_LOG_ERR(A) std::cerr << "ERROR: " << A << std::endl; BOOST_LOG_TRIVIAL(error) << "ERROR: " << A;
+#define HELPER_LOG_OUT(A) std::cout << A << "\n"; BOOST_LOG_TRIVIAL(info) << A;
+#define HELPER_LOG_ERR(A) std::cerr << "ERROR: " << A << "\n"; BOOST_LOG_TRIVIAL(error) << "ERROR: " << A;
 
 namespace helper {
 
