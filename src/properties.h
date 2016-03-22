@@ -18,27 +18,27 @@
 #define ASSETS_PATH "./assets/" 
 #define FACE_CASCADE ASSETS_PATH "haarcascade_frontalface_alt2.xml" 
 #define EYES_CASCADE ASSETS_PATH "haarcascade_eye_tree_eyeglasses.xml"
-#define FACE_FRAME_COLOUR cv::Scalar(255,0,0) 
-#define EYES_FRAME_COLOUR cv::Scalar(255,0,255) 
+#define FACE_FRAME_COLOUR cv::Scalar(110,110,200) 
+#define EYES_FRAME_COLOUR cv::Scalar(110,110,200) 
 #define LOGGING_FILE_PATH "./logs/%Y-%m-%d_%H-%M-%S.%N.log"
 #define BACKGROUND_COLOUR 0.f, 0.f, 0.f, 1.f
 #define FONTS_PATH ASSETS_PATH "fonts/"
 #define PHOTOS_PATH "./photos/"
-#define SESSION_AVERAGE_PATH "./session_average/"
+#define SESSION_AVERAGE_PATH "session_average/"
 namespace properties {
   const boost::filesystem::path sample_images_path {"assets/sampleImages/"};
 }
 
 // default values for the runtime constants
 #define QUIT_AFTER_MINUTES 600 
-#define ANIMATION_SPEED 10 // large values => slower speed
+#define ANIMATION_SPEED 8 // large values => slower speed
 #define CAMERA_INDEX 0 
-#define MAX_IMAGES_IN_LOOP 30
-#define NEW_IMAGE_FADEIN_TIME 15 // seconds
+#define MAX_IMAGES_IN_LOOP 20
+#define NEW_IMAGE_FADEIN_TIME 20 // seconds
 #define VSYNC 1 // the swapping buffer interval
 #define ANTI_ALLIASING 4
-#define CAPTURED_IMAGE_WIDTH 1024   // this should probably match the camera's width
-#define CAPTURED_IMAGE_HEIGHT 768  // this should probably match the camera's height
+#define CAPTURED_IMAGE_WIDTH 1280   // this should probably match the camera's width
+#define CAPTURED_IMAGE_HEIGHT 856  // this should probably match the camera's height
 #define WAIT_TIME_BETWEEN_PHOTOS 10 // seconds
 
 // Global runtime constants (these are defined by helper::parametrise)

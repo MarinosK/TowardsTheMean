@@ -68,6 +68,7 @@ void Projection::update_frame() {
     if (glfwWindowShouldClose(projection_window_m)) // quit on escape
       throw helper::quit_program_exception();
     gl_preample();
+    glTranslatef(0.12,0,0); // translate to compensate for a problem with the projector
     auto now = glfwGetTime();
     auto index = 0.f;
     cv::Mat average {image_buffer_m.binary_fold([&now, &index](auto im1, auto im2) {
@@ -78,6 +79,12 @@ void Projection::update_frame() {
 	})};
     fade_in_new_images(average);
     // cv::normalize(average, average, 0, 255, cv::NORM_MINMAX);
+    constexpr unsigned int border_size {300};
+    // cv::copyMakeBorder(average, average, 0, 0, border_size, border_size, cv::BORDER_CONSTANT, cv::Scalar(0,0,0));
+    cv::Mat left_border_roi {average(cv::Rect(0,0,border_size,average.rows))};
+    cv::Mat right_border_roi {average(cv::Rect(average.cols-border_size,0,border_size,average.rows))};
+    left_border_roi.setTo(0);
+    right_border_roi.setTo(0);
     helper::gl::display_cv_mat(average);
     glfwSwapBuffers(projection_window_m);
   }

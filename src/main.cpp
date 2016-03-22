@@ -66,7 +66,7 @@ int main( int argc, char** argv) {
       if (boost::filesystem::create_directories(SESSION_AVERAGE_PATH)) 
 	throw std::runtime_error("Failed to create session average folder");
     std::ostringstream filename;
-    filename << SESSION_AVERAGE_PATH << helper::bot::generate_unique_filename_for_average();
+    filename << SESSION_AVERAGE_PATH << helper::bot::generate_unique_filename_for_average(SESSION_AVERAGE_PATH);
     helper::bot::generate_average(Capture::get_photo_folder_path(),filename.str());
     // HELPER_LOG_OUT("tweeting session average..");
     // to implement

@@ -47,13 +47,19 @@ private:
   unsigned int photo_file_counter_m;
 
   void load_and_save_portait(cv::Mat&, helper::opencv::Face&); 
-  inline void render_text(const char* text, double x, double y, int font_size = 56) { 
+  inline void render_text(const char* text, double x, double y, int font_size = 156) { 
+    glPushAttrib(GL_ALL_ATTRIB_BITS);
+    glPixelTransferf(GL_RED_BIAS, -1.0f);
+    glPixelTransferf(GL_GREEN_BIAS, -1.0f);
+    glPixelTransferf(GL_BLUE_BIAS, -1.0f);
     font_m.FaceSize(font_size);
     font_m.Render(text, -1, FTPoint(x,y));
+    glPopAttrib();
   }
   inline void gl_preample() {
     glfwMakeContextCurrent(capture_window_m);    
-    glViewport(0, 0, window_width_m, window_height_m);
+    // glViewport(0, 0, window_width_m, window_height_m);
+    glViewport(0, 0, 4096, 2304); // ***** HACK FOR RETINA DISPLAY
     glClearColor(BACKGROUND_COLOUR); 
     glClear(GL_COLOR_BUFFER_BIT);
     glMatrixMode(GL_PROJECTION);
@@ -75,6 +81,12 @@ private:
       throw std::runtime_error("Failed to fetch data from the camera");
 #endif // UNSAFE_OPTIMISATIONS
   }
+  inline void zoom_in_video_frame (cv::Mat& video_frame) {
+    const unsigned int x {(camera_width_m - CAPTURED_IMAGE_WIDTH) / 2};
+    const unsigned int y {(camera_height_m - CAPTURED_IMAGE_HEIGHT) / 2};
+    cv::Mat roi = video_frame(cv::Rect(x,y,CAPTURED_IMAGE_WIDTH,CAPTURED_IMAGE_HEIGHT));
+    roi.copyTo(video_frame);
+}
  
 public:
   void update_frame(); // generate next frame & detection face

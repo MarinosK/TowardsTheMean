@@ -95,7 +95,7 @@ namespace helper {
   namespace bot {
     void prepare_photo(const std::string& path);
     void generate_average(const std::string& path_to_folder, const std::string& output_file);
-    std::string generate_unique_filename_for_average();
+    std::string generate_unique_filename_for_average(const std::string&);
     void send_email(const std::string& path);
   }
   

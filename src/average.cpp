@@ -19,7 +19,7 @@ int main( int argc, char** argv) {
     std::cout << input_path << "\n";
     if (!boost::filesystem::is_directory(input_folder))
       std::cerr << input_path << " folder does not exist\n";  
-    helper::bot::generate_average(input_path,helper::bot::generate_unique_filename_for_average());
+    helper::bot::generate_average(input_path,helper::bot::generate_unique_filename_for_average(input_path));
     std::cout << "Goodbye!\n";
     return 0;
   }

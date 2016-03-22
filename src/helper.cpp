@@ -182,7 +182,8 @@ void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Fac
   // add a 30% border so that rotation/scaling will not reveal any black background (also update the face's coordinates)
   const int border_size {photo.cols / 3};
   cv::copyMakeBorder(photo, photo, border_size, border_size, border_size, border_size,
-  		     cv::BORDER_REPLICATE, cv::Scalar(255,255,255));   // cv::BORDER_CONSTANT, cv::Scalar(200,200,200)); 
+  		     cv::BORDER_REPLICATE, cv::Scalar(255,255,255));
+		     // cv::BORDER_CONSTANT, cv::Scalar(200,200,200)); 
   const cv::Point offset {border_size, border_size};
   face.left_eye += offset;
   face.right_eye += offset;
@@ -206,9 +207,12 @@ void helper::opencv::allign_and_isolate_face(cv::Mat& photo, helper::opencv::Fac
   const cv::Point2f third_point_src {third_point_src_x, third_point_src_y};
 
   // calculate the destination points to calculate the Affine Matrix
-  constexpr float l_eye_pct {0.40f};
-  constexpr float r_eye_pct {0.59f};
-  constexpr float eyes_level_pct {0.43f};
+  // constexpr float l_eye_pct {0.40f};
+  // constexpr float r_eye_pct {0.59f};
+  // constexpr float eyes_level_pct {0.43f};
+  constexpr float l_eye_pct {0.44f};
+  constexpr float r_eye_pct {0.53f};
+  constexpr float eyes_level_pct {0.48f};
   static const cv::Point2f left_eye_dst {static_cast<float>(properties::captured_image_width) * l_eye_pct, 
       static_cast<float>(properties::captured_image_height) * eyes_level_pct};
   static const cv::Point2f right_eye_dst {static_cast<float>(properties::captured_image_width) * r_eye_pct,
@@ -305,21 +309,23 @@ void helper::bot::send_email(const std::string& path) {
   // }
 }
 
-std::string helper::bot::generate_unique_filename_for_average() {
+std::string helper::bot::generate_unique_filename_for_average(const std::string& root) {
   auto day = boost::gregorian::day_clock::universal_day();
   unsigned int i{1};
+  std::ostringstream filename_preample;
+  filename_preample << day.month() << " " << day.day() << " " << day.year() << " session average no ";
   std::ostringstream filename;
-  filename << day.month() << " " << day.day() << " " << day.year() << " session average no " << i;
+  filename << filename_preample.str() << i << ".tif";
   std::ostringstream test_path_filename;
-  test_path_filename << filename.str() << ".tif";
+  test_path_filename << root << filename.str();
   boost::filesystem::path test_path{test_path_filename.str()};
   while (boost::filesystem::exists(test_path)) {
-    auto number_of_digits = static_cast<signed int>(std::log10(i)) + 1;
-    filename.seekp(-number_of_digits,filename.cur);
-    filename << i++;
+    filename.str("");
+    filename.clear();
+    filename << filename_preample.str() << ++i << ".tif";
     test_path_filename.str("");
     test_path_filename.clear();
-    test_path_filename << filename.str() << ".tif";
+    test_path_filename << root << filename.str();
     test_path = boost::filesystem::path{test_path_filename.str()};
   }
   return filename.str();
